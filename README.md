@@ -1,6 +1,6 @@
 # Zim 2.0 Computer Algebraic System
 
-Zim 2.0 is a greenfield TypeScript symbolic-mathematics engine. The implementation currently completes the engineering manual through **Week 5**: strict lexing, typed parsing, exact rational arithmetic, reusable AST visitors, deterministic normalization, and a modular fixed-point simplifier.
+Zim 2.0 is a greenfield TypeScript symbolic-mathematics engine. The implementation currently includes strict lexing, typed parsing, exact rational arithmetic, reusable AST visitors, deterministic normalization, and a modular fixed-point simplifier.
 
 The former JavaScript implementation is preserved under `legacy/` for comparison only. Production code in `packages/core` does not import it.
 
@@ -59,6 +59,5 @@ simplify(parse("x/x + x^0"), { nonZeroVariables: ["x"] });
 - `packages/core/test`: unit, structural, regression, and invariant tests
 - `datasets/regression`: curated legacy behavior and corrected expectations
 - `legacy`: isolated pre-overhaul implementation and source datasets
-- `docs`: engineering manual, architecture, API notes, legacy analysis, and completion log
 
 Solvers, polynomial coefficient maps, LaTeX, CLI, and GUI are intentionally outside the completed Week 0–5 scope.
