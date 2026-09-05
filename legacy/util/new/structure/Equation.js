@@ -109,6 +109,7 @@ class Equation extends BinaryOp {
                     const result = new Equation(mainBranch.left, newRight).solveFor(variable);
                     return Array.isArray(result) ? result.flat() : result;
                 } else {
+                    // 2 ^ x = 5 => ln(2 ^ x) = ln(5) => x = ln(5)/ln(2)
                     const newRight = new BinaryOp(
                         new UnaryOp(otherBranch, LOGARITHM),
                         new UnaryOp(mainBranch.left, LOGARITHM),
@@ -121,7 +122,7 @@ class Equation extends BinaryOp {
                         const principal = newRight.simplify();
                         return [principal, new BinaryOp(new Constant(-1), principal, MULTIPLY).simplify()];
                     }
-                    const result = new Equation(mainBranch.left, newRight).solveFor(variable);
+                    const result = new Equation(mainBranch.right, newRight).solveFor(variable);
                     return Array.isArray(result) ? result.flat() : result;
                 }
             }

@@ -140,18 +140,12 @@ class BinaryOp extends Symbol {
                 }
             }
 
-            if (this.right.checkName("BinaryOp")) {
-                nr = this.right._peakFlatten();
-            }
+            if (this.right.checkName("BinaryOp")) this.right = this.right._peakFlatten();
 
-            if (this.left.checkName("BinaryOp")) {
-                nl = this.left._peakFlatten();
-            }
 
-            if (nl === this.left && nr === this.right) {
-                return this;
-            }
-            return new BinaryOp(nl, nr, this.type);
+            if (this.left.checkName("BinaryOp")) this.left = this.left._peakFlatten();
+
+            return this;
 
         } // If Both values are not constant, cannot flatten
 

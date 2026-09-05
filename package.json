@@ -1,12 +1,27 @@
 {
-  "name": "computer-algebraic-system",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "zim-computer-algebraic-system",
+  "version": "2.0.0-alpha.1",
+  "private": true,
+  "description": "Zim 2.0 exact symbolic mathematics engine",
+  "type": "commonjs",
+  "main": "packages/core/dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "node scripts/clean.js",
+    "build": "tsc -p packages/core/tsconfig.json",
+    "test": "npm run build && node --test packages/core/test/*.test.js",
+    "lint": "eslint packages/core/src",
+    "format:check": "prettier --check \"packages/core/**/*.{ts,js,json}\" \"docs/**/*.md\" README.md package.json",
+    "check": "npm run test && npm run lint && npm run format:check"
   },
-  "keywords": [],
-  "author": "Sun",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "eslint": "^9.35.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.42.0"
+  },
   "license": "ISC"
 }
