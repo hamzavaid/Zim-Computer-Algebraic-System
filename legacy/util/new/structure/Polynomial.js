@@ -10,12 +10,17 @@ class Polynomial extends Symbol {
      */
     constructor(expression, variable) {
         super();
-        this.expression = expression.simplify();
+        this.expression = expression;
         this.variable = variable;
     }
 
     toString() {
         return this.expression.toString();
+    }
+
+    simplify() {
+        this.expression = this.expression.simplify();
+        return this;
     }
 
     eval(variable, value) {

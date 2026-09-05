@@ -92,6 +92,7 @@ function main() {
         "-1 + 3 * x = -7 - 6 * x",
         "2 + x = 7 + 6 * x",
         "-6 * x + 1 = -2 + 7 * x",
+        //"x ^ 2 + 2 * x + 1 = 0",
     ]
 
     for (let str of arr_exp) {
