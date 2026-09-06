@@ -13,29 +13,99 @@
   { "input": "4 * (x + 2) = 20", "legacyResult": "3", "expected": "3", "milestone": "week-7" },
   { "input": "(x - 3) / 2 = 4", "legacyResult": "11", "expected": "11", "milestone": "week-7" },
   { "input": "x ^ 3 = 27", "legacyResult": "3", "expected": "3", "milestone": "future-polynomial" },
-  { "input": "3 ^ x = 27", "legacyResult": "3", "expected": "3", "milestone": "future-exponential" },
+  {
+    "input": "3 ^ x = 27",
+    "legacyResult": "3",
+    "expected": "3",
+    "milestone": "future-exponential"
+  },
   { "input": "x + x = 10", "legacyResult": "5", "expected": "5", "milestone": "week-7" },
   { "input": "2 * (x - 1) = 6", "legacyResult": "4", "expected": "4", "milestone": "week-7" },
   { "input": "x / (2 + 1) = 5", "legacyResult": "15", "expected": "15", "milestone": "week-7" },
-  { "input": "(2 + x) ^ 2 = 25", "legacyResult": "3, -7", "expected": "-7, 3", "milestone": "week-8" },
+  {
+    "input": "(2 + x) ^ 2 = 25",
+    "legacyResult": "3, -7",
+    "expected": "-7, 3",
+    "milestone": "week-8"
+  },
   { "input": "ln(x) = 0", "legacyResult": "1", "expected": "1", "milestone": "future-logarithm" },
-  { "input": "ln(x) = 2", "legacyResult": "e^2", "expected": "e^2", "milestone": "future-logarithm" },
-  { "input": "ln(x - 1) = 1", "legacyResult": "e + 1", "expected": "e + 1", "milestone": "future-logarithm" },
+  {
+    "input": "ln(x) = 2",
+    "legacyResult": "e^2",
+    "expected": "e^2",
+    "milestone": "future-logarithm"
+  },
+  {
+    "input": "ln(x - 1) = 1",
+    "legacyResult": "e + 1",
+    "expected": "e + 1",
+    "milestone": "future-logarithm"
+  },
   { "input": "x / 4 - 1 = 2", "legacyResult": "12", "expected": "12", "milestone": "week-7" },
   { "input": "5 - x = 2", "legacyResult": "3", "expected": "3", "milestone": "week-7" },
-  { "input": "x * 0 = 5", "legacyResult": "no solution", "expected": "no solution", "milestone": "week-7" },
-  { "input": "0 * x = 0", "legacyResult": "any real x", "expected": "identity", "milestone": "week-7" },
-  { "input": "x ^ 0 = 1", "legacyResult": "any nonzero x", "expected": "any nonzero x", "milestone": "week-8-domain" },
-  { "input": "1 ^ x = 1", "legacyResult": "any real x", "expected": "identity", "milestone": "future-domain" },
-  { "input": "(x / 2) ^ 2 = 9", "legacyResult": "6, -6", "expected": "-6, 6", "milestone": "week-8" },
-  { "input": "2^(x - 1) = 4", "legacyResult": "3", "expected": "3", "milestone": "future-exponential" },
-  { "input": "ln(2*x) = 3", "legacyResult": "e^3/2", "expected": "e^3/2", "milestone": "future-logarithm" },
+  {
+    "input": "x * 0 = 5",
+    "legacyResult": "no solution",
+    "expected": "no solution",
+    "milestone": "week-7"
+  },
+  {
+    "input": "0 * x = 0",
+    "legacyResult": "any real x",
+    "expected": "identity",
+    "milestone": "week-7"
+  },
+  {
+    "input": "x ^ 0 = 1",
+    "legacyResult": "any nonzero x",
+    "expected": "any nonzero x",
+    "milestone": "week-8-domain"
+  },
+  {
+    "input": "1 ^ x = 1",
+    "legacyResult": "any real x",
+    "expected": "identity",
+    "milestone": "future-domain"
+  },
+  {
+    "input": "(x / 2) ^ 2 = 9",
+    "legacyResult": "6, -6",
+    "expected": "-6, 6",
+    "milestone": "week-8"
+  },
+  {
+    "input": "2^(x - 1) = 4",
+    "legacyResult": "3",
+    "expected": "3",
+    "milestone": "future-exponential"
+  },
+  {
+    "input": "ln(2*x) = 3",
+    "legacyResult": "e^3/2",
+    "expected": "e^3/2",
+    "milestone": "future-logarithm"
+  },
   { "input": "3*x + 2 = 11", "legacyResult": "3", "expected": "3", "milestone": "week-7" },
   { "input": "x/3 + x/6 = 5", "legacyResult": "6", "expected": "10", "milestone": "week-7" },
-  { "input": "(x - 2)*(x + 2) = 0", "legacyResult": "2, -2", "expected": "-2, 2", "milestone": "week-8" },
-  { "input": "x^2 - 5*x + 6 = 0", "legacyResult": "2, 3", "expected": "2, 3", "milestone": "week-8" },
+  {
+    "input": "(x - 2)*(x + 2) = 0",
+    "legacyResult": "2, -2",
+    "expected": "-2, 2",
+    "milestone": "week-8"
+  },
+  {
+    "input": "x^2 - 5*x + 6 = 0",
+    "legacyResult": "2, 3",
+    "expected": "2, 3",
+    "milestone": "week-8"
+  },
   { "input": "x^2 + x = 0", "legacyResult": "0, -1", "expected": "-1, 0", "milestone": "week-8" },
-  { "input": "(x+1)/(x-1) = 2", "legacyResult": "3", "expected": "3", "milestone": "future-rational" },
+  {
+    "input": "(x+1)/(x-1) = 2",
+    "legacyResult": "3",
+    "expected": "3",
+    "milestone": "future-rational"
+  },
   { "input": "x - 2*x = 5", "legacyResult": "-5", "expected": "-5", "milestone": "week-7" },
   { "input": "7*x/7 = 3", "legacyResult": "3", "expected": "3", "milestone": "week-7" },
   { "input": "(x/3) - (x/6) = 2", "legacyResult": "12", "expected": "12", "milestone": "week-7" }

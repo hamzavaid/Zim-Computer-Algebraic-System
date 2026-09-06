@@ -6,6 +6,7 @@ const {
   simplifyExpression,
   constantFoldingRule,
   identityRule,
+  likeTermRule,
   signRule,
   powerRule,
   safeCancellationRule,
@@ -43,6 +44,13 @@ test("safe cancellation rule works only with its assumption in isolation", () =>
         .expression,
     ),
     "1",
+  );
+});
+
+test("like-term rule works in isolation", () => {
+  assert.equal(
+    format(simplifyExpression(parse("3*x + 2*x"), {}, [likeTermRule]).expression),
+    "5 * x",
   );
 });
 

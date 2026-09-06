@@ -1,0 +1,1 @@
+export { degree } from "./polynomial";

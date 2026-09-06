@@ -1,6 +1,6 @@
 # Zim 2.0 Computer Algebraic System
 
-Zim 2.0 is a greenfield TypeScript symbolic-mathematics engine. The implementation currently includes strict lexing, typed parsing, exact rational arithmetic, reusable AST visitors, deterministic normalization, and a modular fixed-point simplifier.
+Zim 2.0 is a greenfield TypeScript symbolic-mathematics engine. The implementation currently includes strict lexing, typed parsing, exact rational arithmetic, reusable AST visitors, deterministic normalization, modular fixed-point simplification, exact polynomial coefficient maps, and verified single-variable linear solving.
 
 The former JavaScript implementation is preserved under `legacy/` for comparison only. Production code in `packages/core` does not import it.
 
@@ -20,13 +20,17 @@ npm run build
 ## Current API
 
 ```js
-const { parse, simplify, format } = require("./packages/core/dist");
+const { parse, simplify, solveFor, format } = require("./packages/core/dist");
 
 const ast = parse("1/3 + 1/6 + x * 0");
 const result = simplify(ast, { debug: true });
 
 console.log(format(result.expression)); // 1/2
 console.log(result.steps.map((step) => step.rule));
+
+const solution = solveFor(parse("x / 3 + x / 6 = 5"), "x");
+console.log(solution.kind); // solution
+console.log(format(solution.value)); // 10
 ```
 
 The Week 5 API is intentionally pre-stable. A versioned consumer API and serialization contract are scheduled for Week 9.
@@ -57,7 +61,7 @@ simplify(parse("x/x + x^0"), { nonZeroVariables: ["x"] });
 
 - `packages/core/src`: new Zim 2 production source
 - `packages/core/test`: unit, structural, regression, and invariant tests
-- `datasets/regression`: curated legacy behavior and corrected expectations
+- `datasets/regression`: legacy, polynomial, and linear-equation regression datasets
 - `legacy`: isolated pre-overhaul implementation and source datasets
 
-Solvers, polynomial coefficient maps, LaTeX, CLI, and GUI are intentionally outside the completed Week 0–5 scope.
+Quadratic solving, LaTeX output, the stable public API, CLI, and GUI are planned for later milestones.

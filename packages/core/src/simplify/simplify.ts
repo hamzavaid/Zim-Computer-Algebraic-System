@@ -5,6 +5,7 @@ import { ZimError } from "../errors/ZimError";
 import { constantFoldingRule } from "./arithmeticRules";
 import { safeCancellationRule } from "./cancellationRules";
 import { identityRule } from "./identityRules";
+import { likeTermRule } from "./likeTermRules";
 import { powerRule } from "./powerRules";
 import { RewriteRule, SimplifyContext } from "./RewriteRule";
 import { signRule } from "./signRules";
@@ -32,6 +33,7 @@ export const defaultRules: readonly RewriteRule[] = [
   signRule,
   powerRule,
   safeCancellationRule,
+  likeTermRule,
 ];
 
 function simplifyChildren(
