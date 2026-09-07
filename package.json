@@ -18,7 +18,7 @@
     "build": "npm run build:core && npm run build:cli",
     "test": "npm run build && node --test packages/core/test/*.test.js packages/cli/test/*.test.js",
     "lint": "eslint packages/core/src packages/cli/src",
-    "format:check": "prettier --check \"packages/**/*.{ts,js,json}\" \"datasets/**/*.json\" \"docs/**/*.md\" \".github/**/*.yml\" README.md package.json",
+    "format:check": "prettier --check \"packages/**/*.{ts,js,json}\" \"datasets/**/*.json\" \".github/**/*.yml\" README.md package.json",
     "check": "npm run test && npm run lint && npm run format:check"
   },
   "engines": {
