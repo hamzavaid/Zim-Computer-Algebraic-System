@@ -47,13 +47,14 @@ test("classifies identities and contradictions", () => {
   assert.deepEqual(solveFor(parse("x = x + 1"), "x"), { kind: "no-solution" });
 });
 
-test("returns explicit unsupported results outside the linear boundary", () => {
+test("routes advanced equations and retains explicit unsupported boundaries", () => {
   assert.deepEqual(solveFor(parse("x + 1"), "x"), {
     kind: "unsupported",
     reason: "Solving requires an equation",
   });
-  assert.match(solveFor(parse("x^3 = 8"), "x").reason, /degree 3/i);
+  assert.equal(format(solveFor(parse("x^3 = 8"), "x").value), "2");
   assert.match(solveFor(parse("x + y = 2"), "x").reason, /variable 'y'/i);
-  assert.match(solveFor(parse("ln(x) = 1"), "x").reason, /not polynomial/i);
+  assert.equal(format(solveFor(parse("ln(x) = 1"), "x").value), "exp(1)");
+  assert.match(solveFor(parse("x^3 + x + 1 = 0"), "x").reason, /irreducible/i);
   assert.match(solveFor(parse("x = 1"), "not valid").reason, /invalid variable/i);
 });

@@ -1,21 +1,30 @@
 import { format } from "../format/formatter";
 import { toLatex } from "../format/latex";
 import { parse } from "../parser/Parser";
-import { serializeSolveResult, serializeSyntaxTree } from "../serialization/serialize";
+import {
+  serializeSolveResult,
+  serializeSyntaxTree,
+  serializeSystemSolveResult,
+} from "../serialization/serialize";
 import { simplify } from "../simplify/simplify";
 import { solveFor } from "../solve/solveFor";
 import { ZimError } from "../errors/ZimError";
 import { formatSolveResult, latexSolveResult } from "./public";
+import { solveSystem } from "../solve/systemSolver";
+import { formatSystemSolveResult } from "./public";
 
 export const API_VERSION = "1.0" as const;
 
-export type ApiOperation = "parse" | "simplify" | "solve" | "format" | "latex";
+export type ApiOperation = "parse" | "simplify" | "solve" | "solve-system" | "format" | "latex";
 
 export interface ApiRequest {
   readonly version: typeof API_VERSION;
   readonly operation: ApiOperation;
-  readonly expression: string;
+  readonly expression?: string;
+  readonly expressions?: readonly string[];
   readonly variable?: string;
+  readonly variables?: readonly string[];
+  readonly domain?: "real" | "complex";
   readonly includeSteps?: boolean;
 }
 
@@ -48,6 +57,37 @@ function error(code: string, message: string, start?: number, end?: number): Api
 export function execute(request: ApiRequest): ApiResponse {
   if (!request || request.version !== API_VERSION) {
     return error("API_VERSION_UNSUPPORTED", `Expected API version '${API_VERSION}'`);
+  }
+  if (request.operation === "solve-system") {
+    if (!Array.isArray(request.expressions) || request.expressions.length === 0) {
+      return error("INVALID_REQUEST", "System solve requests require equations");
+    }
+    if (!Array.isArray(request.variables) || request.variables.length === 0) {
+      return error("VARIABLE_REQUIRED", "System solve requests require variables");
+    }
+    try {
+      const equations = request.expressions.map((source) => parse(source));
+      if (equations.some((tree) => tree.kind !== "equation")) {
+        return error("INVALID_REQUEST", "Every system member must be an equation");
+      }
+      const solved = solveSystem(
+        equations.filter((tree) => tree.kind === "equation"),
+        request.variables,
+      );
+      return {
+        version: API_VERSION,
+        status: "ok",
+        result: {
+          solution: serializeSystemSolveResult(solved),
+          text: formatSystemSolveResult(solved),
+        },
+      };
+    } catch (caught) {
+      if (caught instanceof ZimError) {
+        return error(caught.code, caught.message, caught.start, caught.end);
+      }
+      return error("INTERNAL_ERROR", caught instanceof Error ? caught.message : "Unknown failure");
+    }
   }
   if (typeof request.expression !== "string" || request.expression.trim() === "") {
     return error("INVALID_REQUEST", "A non-empty expression string is required");
@@ -88,7 +128,7 @@ export function execute(request: ApiRequest): ApiResponse {
     }
     if (request.operation === "solve") {
       if (!request.variable) return error("VARIABLE_REQUIRED", "Solve requests require a variable");
-      const solved = solveFor(tree, request.variable);
+      const solved = solveFor(tree, request.variable, { domain: request.domain });
       return {
         version: API_VERSION,
         status: "ok",

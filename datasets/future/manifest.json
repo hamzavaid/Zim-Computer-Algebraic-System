@@ -3,44 +3,44 @@
   "datasets": [
     {
       "file": "quadratic-equations.json",
-      "capability": "quadratic and complex-root solving",
-      "status": "supported-real-only",
+      "capability": "quadratic solving over real and complex domains",
+      "status": "supported",
       "cases": 25
     },
     {
       "file": "transcendental-equations.json",
       "capability": "exponential, logarithmic, trigonometric, radical, and special-function solving",
-      "status": "unsupported",
+      "status": "supported",
       "cases": 25
     },
     {
       "file": "rational-and-absolute-equations.json",
       "capability": "domain-aware rational and piecewise absolute-value solving",
-      "status": "unsupported",
+      "status": "partially-supported",
       "cases": 25
     },
     {
       "file": "linear-systems.json",
       "capability": "simultaneous linear systems",
-      "status": "unsupported",
+      "status": "supported",
       "cases": 20
     },
     {
       "file": "complex-root-equations.json",
       "capability": "complex-number roots",
-      "status": "unsupported",
+      "status": "supported",
       "cases": 25
     },
     {
       "file": "cubic-and-higher-equations.json",
       "capability": "cubic and higher-degree polynomial solving",
-      "status": "unsupported",
+      "status": "supported",
       "cases": 25
     },
     {
       "file": "variable-denominator-rational-equations.json",
       "capability": "domain-aware rational equations with variable denominators",
-      "status": "unsupported",
+      "status": "supported",
       "cases": 25
     }
   ]

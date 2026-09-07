@@ -5,8 +5,18 @@
   { "args": ["latex", "x^2 = 1/4"], "exitCode": 0, "stdout": "{x}^{2} = \\frac{1}{4}" },
   {
     "args": ["solve", "--variable", "x", "x^3 = 8"],
-    "exitCode": 3,
-    "stdout": "unsupported: Polynomial degree 3 is not supported"
+    "exitCode": 0,
+    "stdout": "x = 2"
+  },
+  {
+    "args": ["solve", "--variable", "x", "--domain", "complex", "x^2 + 1 = 0"],
+    "exitCode": 0,
+    "stdout": "x = -i, i"
+  },
+  {
+    "args": ["system", "--variables", "x,y", "x + y = 5; x - y = 1"],
+    "exitCode": 0,
+    "stdout": "x = 3, y = 2"
   },
   { "args": ["parse", "x @ 2"], "exitCode": 2, "stderrIncludes": "LEX_ERROR" },
   { "args": ["unknown", "x"], "exitCode": 2, "stderrIncludes": "Unknown command" }

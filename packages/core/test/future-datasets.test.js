@@ -25,25 +25,37 @@ test("future dataset manifest matches every dataset file", () => {
     const rows = readDataset(entry.file);
     assert.equal(rows.length, entry.cases, entry.file);
     assert.ok(entry.capability.length > 0);
-    assert.ok(["supported-real-only", "unsupported"].includes(entry.status));
+    assert.ok(["supported", "partially-supported"].includes(entry.status));
   }
 });
 
-test("future single-equation datasets parse but remain explicitly unsupported", () => {
+test("advanced single-equation datasets parse and return implemented results", () => {
   for (const file of [
     "complex-root-equations.json",
     "cubic-and-higher-equations.json",
     "transcendental-equations.json",
-    "rational-and-absolute-equations.json",
     "variable-denominator-rational-equations.json",
   ]) {
     for (const fixture of readDataset(file)) {
       const equation = core.parse(fixture.equation);
-      const result = core.solveFor(equation, fixture.variable);
-      assert.equal(result.kind, "unsupported", `${file}: ${fixture.equation}`);
-      assert.ok(result.reason.length > 0);
+      const result = core.solveFor(equation, fixture.variable, {
+        domain: fixture.domain === "complex" ? "complex" : "real",
+      });
+      assert.notEqual(result.kind, "unsupported", `${file}: ${fixture.equation}`);
       assert.ok(Array.isArray(fixture.solutions));
     }
+  }
+});
+
+test("the mixed rational and absolute-value corpus reports its partial boundary", () => {
+  for (const fixture of readDataset("rational-and-absolute-equations.json")) {
+    const result = core.solveFor(core.parse(fixture.equation), fixture.variable, {
+      domain: fixture.domain === "complex" ? "complex" : "real",
+    });
+    if (fixture.family === "rational")
+      assert.notEqual(result.kind, "unsupported", fixture.equation);
+    else if (fixture.family === "absolute")
+      assert.equal(result.kind, "unsupported", fixture.equation);
   }
 });
 
@@ -67,19 +79,20 @@ test("specialized future fixtures declare the capability constraints they exerci
   }
 });
 
-test("linear-system fixtures are valid while no system solver is exposed", () => {
-  assert.equal(core.solveSystem, undefined);
+test("linear-system fixtures are solved and exact unique solutions verify", () => {
+  assert.equal(typeof core.solveSystem, "function");
   for (const fixture of readDataset("linear-systems.json")) {
     assert.ok(fixture.equations.length >= 2);
     assert.ok(["unique", "infinite", "no-solution"].includes(fixture.kind));
-    fixture.equations.forEach((equation) => assert.equal(core.parse(equation).kind, "equation"));
+    const equations = fixture.equations.map((source) => core.parse(source));
+    equations.forEach((equation) => assert.equal(equation.kind, "equation"));
+    const result = core.solveSystem(equations, fixture.variables);
+    assert.equal(result.kind, fixture.kind);
+    assert.equal(result.verified, true);
     if (fixture.kind === "unique") {
-      assert.deepEqual(Object.keys(fixture.solution).sort(), [...fixture.variables].sort());
+      assert.deepEqual(Object.keys(result.solution).sort(), [...fixture.variables].sort());
       const environment = Object.fromEntries(
-        Object.entries(fixture.solution).map(([name, value]) => [
-          name,
-          core.evaluate(core.parse(value)),
-        ]),
+        Object.entries(result.solution).map(([name, value]) => [name, core.evaluate(value)]),
       );
       for (const source of fixture.equations) {
         const equation = core.parse(source);

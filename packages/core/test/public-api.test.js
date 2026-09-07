@@ -5,7 +5,15 @@ const path = require("node:path");
 const core = require("../dist");
 
 test("public entrypoint exposes the stable backend operations", () => {
-  for (const name of ["parse", "simplify", "solve", "format", "toLatex", "execute"]) {
+  for (const name of [
+    "parse",
+    "simplify",
+    "solve",
+    "solveSystem",
+    "format",
+    "toLatex",
+    "execute",
+  ]) {
     assert.equal(typeof core[name], "function", name);
   }
   const tree = core.parse("1/3 + 1/6");
@@ -79,6 +87,28 @@ test("v1 solve responses serialize exact and symbolic quadratic results", () => 
   assert.match(symbolic.result.latex, /\\sqrt/);
 });
 
+test("v1 exposes complex-domain and simultaneous-system solving", () => {
+  const complex = core.execute({
+    version: "1.0",
+    operation: "solve",
+    expression: "x^2 + 1 = 0",
+    variable: "x",
+    domain: "complex",
+  });
+  assert.equal(complex.status, "ok");
+  assert.equal(complex.result.solution.kind, "multiple-solutions");
+
+  const system = core.execute({
+    version: "1.0",
+    operation: "solve-system",
+    expressions: ["x + y = 5", "x - y = 1"],
+    variables: ["x", "y"],
+  });
+  assert.equal(system.status, "ok");
+  assert.equal(system.result.solution.kind, "unique");
+  assert.equal(system.result.text, "x = 3, y = 2");
+});
+
 test("v1 returns stable error codes and source positions", () => {
   assert.equal(
     core.execute({ version: "2.0", operation: "parse", expression: "x" }).error.code,
@@ -111,6 +141,7 @@ test("shipped v1 JSON Schema agrees with the runtime contract", () => {
     "parse",
     "simplify",
     "solve",
+    "solve-system",
     "format",
     "latex",
   ]);

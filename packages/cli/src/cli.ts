@@ -7,6 +7,8 @@ import {
   serializeSyntaxTree,
   simplify,
   solve,
+  solveSystem,
+  formatSystemSolveResult,
   toLatex,
   ZimError,
 } from "@zim/core";
@@ -19,7 +21,8 @@ export interface CliIo {
 const usage = `Usage:
   zim parse <expression>
   zim simplify [--trace] <expression>
-  zim solve --variable <name> <equation>
+  zim solve --variable <name> [--domain real|complex] <equation>
+  zim system --variables <name,...> <equation; equation; ...>
   zim latex <expression-or-equation>
   zim repl`;
 
@@ -27,6 +30,8 @@ interface ParsedArguments {
   readonly command?: string;
   readonly expression: string;
   readonly variable?: string;
+  readonly variables?: readonly string[];
+  readonly domain?: "real" | "complex";
   readonly trace: boolean;
 }
 
@@ -34,6 +39,8 @@ function parseArguments(args: readonly string[]): ParsedArguments {
   const command = args[0];
   const expressionParts: string[] = [];
   let variableName: string | undefined;
+  let variableNames: string[] | undefined;
+  let domain: "real" | "complex" | undefined;
   let trace = false;
   for (let index = 1; index < args.length; index++) {
     const argument = args[index]!;
@@ -41,9 +48,26 @@ function parseArguments(args: readonly string[]): ParsedArguments {
     else if (argument === "--variable" || argument === "-v") {
       variableName = args[++index];
       if (!variableName) throw new Error(`${argument} requires a variable name`);
+    } else if (argument === "--variables") {
+      const value = args[++index];
+      if (!value) throw new Error("--variables requires a comma-separated variable list");
+      variableNames = value.split(",").filter((name) => name.length > 0);
+    } else if (argument === "--domain") {
+      const value = args[++index];
+      if (value !== "real" && value !== "complex") {
+        throw new Error("--domain must be 'real' or 'complex'");
+      }
+      domain = value;
     } else expressionParts.push(argument);
   }
-  return { command, expression: expressionParts.join(" ").trim(), variable: variableName, trace };
+  return {
+    command,
+    expression: expressionParts.join(" ").trim(),
+    variable: variableName,
+    variables: variableNames,
+    domain,
+    trace,
+  };
 }
 
 export function runCommand(args: readonly string[], io: CliIo = console): number {
@@ -60,6 +84,27 @@ export function runCommand(args: readonly string[], io: CliIo = console): number
     if (!options.expression) {
       io.error(`An expression is required.\n${usage}`);
       return 2;
+    }
+    if (options.command === "system") {
+      if (!options.variables?.length) {
+        io.error("The system command requires --variables <name,...>");
+        return 2;
+      }
+      const sources = options.expression
+        .split(";")
+        .map((source) => source.trim())
+        .filter(Boolean);
+      const trees = sources.map(parse);
+      if (trees.some((tree) => tree.kind !== "equation")) {
+        io.error("Every system member must be an equation");
+        return 2;
+      }
+      const result = solveSystem(
+        trees.filter((tree) => tree.kind === "equation"),
+        options.variables,
+      );
+      io.log(formatSystemSolveResult(result));
+      return result.kind === "unsupported" ? 3 : 0;
     }
     const tree = parse(options.expression);
     if (options.command === "parse") {
@@ -81,7 +126,7 @@ export function runCommand(args: readonly string[], io: CliIo = console): number
         io.error("The solve command requires --variable <name>");
         return 2;
       }
-      const result = solve(tree, { variable: options.variable });
+      const result = solve(tree, { variable: options.variable, domain: options.domain });
       io.log(formatSolveResult(result));
       return result.kind === "unsupported" ? 3 : 0;
     }

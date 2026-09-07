@@ -1,5 +1,6 @@
 import { Expression, SyntaxTree } from "../ast/types";
 import { SolveResult } from "../solve/SolveResult";
+import { SystemSolveResult } from "../solve/systemSolver";
 
 export type SerializedExpression =
   | { readonly kind: "constant"; readonly value: string }
@@ -95,4 +96,24 @@ export function serializeSolveResult(result: SolveResult): SerializedSolveResult
     return { ...result, values: result.values.map(serializeExpression) };
   }
   return result;
+}
+
+export type SerializedSystemSolveResult =
+  | {
+      readonly kind: "unique";
+      readonly solution: Readonly<Record<string, SerializedExpression>>;
+      readonly verified: true;
+    }
+  | { readonly kind: "infinite"; readonly verified: true }
+  | { readonly kind: "no-solution"; readonly verified: true }
+  | { readonly kind: "unsupported"; readonly reason: string };
+
+export function serializeSystemSolveResult(result: SystemSolveResult): SerializedSystemSolveResult {
+  if (result.kind !== "unique") return result;
+  return {
+    ...result,
+    solution: Object.fromEntries(
+      Object.entries(result.solution).map(([name, value]) => [name, serializeExpression(value)]),
+    ),
+  };
 }

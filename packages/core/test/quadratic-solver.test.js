@@ -21,10 +21,10 @@ test("solves and verifies every supported real quadratic fixture", () => {
   assert.equal(fixtures.length, 25);
   for (const fixture of fixtures) {
     const equation = parse(fixture.equation);
-    const result = solveFor(equation, fixture.variable);
+    const result = solveFor(equation, fixture.variable, { domain: fixture.domain ?? "real" });
     if (fixture.domain === "complex") {
-      assert.equal(result.kind, "unsupported", fixture.equation);
-      assert.match(result.reason, /complex/i);
+      assert.equal(result.kind, "multiple-solutions", fixture.equation);
+      assert.equal(result.values.length, 2);
       continue;
     }
     const values = result.kind === "solution" ? [result.value] : result.values;
@@ -61,12 +61,17 @@ test("returns exact roots for square discriminants", () => {
   assert.equal(format(repeated.value), "-1/2");
 });
 
-test("returns symbolic real roots and explicit unsupported degree boundaries", () => {
+test("returns symbolic real roots and preserves an explicit irreducible boundary", () => {
   const irrational = solveFor(parse("x^2 - 2 = 0"), "x");
   assert.equal(irrational.kind, "multiple-solutions");
   assert.ok(irrational.values.every((value) => format(value).includes("sqrt")));
-  assert.match(solveFor(parse("x^3 = 8"), "x").reason, /degree 3/i);
-  assert.match(solveFor(parse("x^2 + 1 = 0"), "x").reason, /complex/i);
+  assert.equal(format(solveFor(parse("x^3 = 8"), "x").value), "2");
+  assert.equal(solveFor(parse("x^2 + 1 = 0"), "x").kind, "no-solution");
+  assert.equal(
+    solveFor(parse("x^2 + 1 = 0"), "x", { domain: "complex" }).kind,
+    "multiple-solutions",
+  );
+  assert.match(solveFor(parse("x^3 + x + 1 = 0"), "x").reason, /irreducible/i);
 });
 
 test("reduces cancelled higher-degree terms before selecting a solver", () => {

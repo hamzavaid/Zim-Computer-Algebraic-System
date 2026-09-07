@@ -9,11 +9,12 @@ import {
   rational,
   subtractExact,
 } from "../ast/rational";
-import { binary, Equation, Expression, func, unary } from "../ast/types";
+import { binary, Equation, Expression, func, unary, variable } from "../ast/types";
 import { simplifyExpression } from "../simplify/simplify";
 import { evaluate } from "../visitors/evaluate";
 import { expressionEquals } from "../visitors/equal";
 import { SolveResult } from "./SolveResult";
+import { SolveDomain } from "./SolveOptions";
 
 function verifiesNumerically(equation: Equation, variableName: string, value: Expression): boolean {
   try {
@@ -30,7 +31,11 @@ function verifiesNumerically(equation: Equation, variableName: string, value: Ex
   }
 }
 
-export function solveQuadraticEquation(equation: Equation, variableName: string): SolveResult {
+export function solveQuadraticEquation(
+  equation: Equation,
+  variableName: string,
+  domain: SolveDomain = "real",
+): SolveResult {
   const left = coefficientMap(equation.left, variableName);
   if (left.kind === "unsupported") return left;
   const right = coefficientMap(equation.right, variableName);
@@ -55,7 +60,22 @@ export function solveQuadraticEquation(equation: Equation, variableName: string)
     multiplyExact(rational(4n), multiplyExact(a, c)),
   );
   if (compareExact(discriminant, rational(0n)) < 0) {
-    return { kind: "unsupported", reason: "Complex quadratic roots are not supported" };
+    if (domain === "real") return { kind: "no-solution" };
+    const positiveDiscriminant = negateExact(discriminant);
+    const exactImaginaryRoot = exactSquareRoot(positiveDiscriminant);
+    const imaginaryRoot = exactImaginaryRoot ?? func("sqrt", [positiveDiscriminant]);
+    const denominator = multiplyExact(rational(2n), a);
+    const realPart = divideExact(negateExact(b), denominator);
+    const imaginaryPart = simplifyExpression(
+      binary("*", binary("/", imaginaryRoot, denominator), variable("i")),
+    ).expression;
+    const values = [
+      simplifyExpression(binary("-", realPart, imaginaryPart)).expression,
+      simplifyExpression(binary("+", realPart, imaginaryPart)).expression,
+    ];
+    return values.length === 1
+      ? { kind: "solution", variable: variableName, value: values[0]!, verified: true }
+      : { kind: "multiple-solutions", variable: variableName, values, verified: true };
   }
 
   const denominator = multiplyExact(rational(2n), a);

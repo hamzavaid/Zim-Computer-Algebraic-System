@@ -47,6 +47,10 @@ export function evaluate(expression: Expression, environment: NumericEnvironment
       if (expression.name === "ln" || expression.name === "log") return Math.log(value);
       if (expression.name === "exp") return Math.exp(value);
       if (expression.name === "sqrt") return Math.sqrt(value);
+      if (expression.name === "cbrt") return Math.cbrt(value);
+      if (expression.name === "sin") return Math.sin(value);
+      if (expression.name === "cos") return Math.cos(value);
+      if (expression.name === "tan") return Math.tan(value);
       throw new Error(`Unsupported numeric function '${expression.name}'`);
     }
   }
