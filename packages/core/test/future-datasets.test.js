@@ -11,7 +11,16 @@ const readDataset = (name) =>
 test("future dataset manifest matches every dataset file", () => {
   const manifest = readDataset("manifest.json");
   assert.equal(manifest.status, "future-capability-corpus");
-  assert.equal(manifest.datasets.length, 4);
+  assert.equal(manifest.datasets.length, 7);
+  assert.equal(
+    manifest.datasets.reduce((total, entry) => total + entry.cases, 0),
+    170,
+  );
+  const datasetFiles = fs
+    .readdirSync(datasetDirectory)
+    .filter((file) => file.endsWith(".json") && file !== "manifest.json")
+    .sort();
+  assert.deepEqual(manifest.datasets.map((entry) => entry.file).sort(), datasetFiles);
   for (const entry of manifest.datasets) {
     const rows = readDataset(entry.file);
     assert.equal(rows.length, entry.cases, entry.file);
@@ -21,7 +30,13 @@ test("future dataset manifest matches every dataset file", () => {
 });
 
 test("future single-equation datasets parse but remain explicitly unsupported", () => {
-  for (const file of ["transcendental-equations.json", "rational-and-absolute-equations.json"]) {
+  for (const file of [
+    "complex-root-equations.json",
+    "cubic-and-higher-equations.json",
+    "transcendental-equations.json",
+    "rational-and-absolute-equations.json",
+    "variable-denominator-rational-equations.json",
+  ]) {
     for (const fixture of readDataset(file)) {
       const equation = core.parse(fixture.equation);
       const result = core.solveFor(equation, fixture.variable);
@@ -29,6 +44,26 @@ test("future single-equation datasets parse but remain explicitly unsupported", 
       assert.ok(result.reason.length > 0);
       assert.ok(Array.isArray(fixture.solutions));
     }
+  }
+});
+
+test("specialized future fixtures declare the capability constraints they exercise", () => {
+  for (const fixture of readDataset("complex-root-equations.json")) {
+    assert.equal(fixture.domain, "complex");
+    assert.ok(fixture.solutions.length > 0);
+    fixture.solutions.forEach((solution) => core.parse(solution));
+  }
+
+  for (const fixture of readDataset("cubic-and-higher-equations.json")) {
+    assert.ok(fixture.degree >= 3);
+    assert.equal(fixture.domain, "real");
+    fixture.solutions.forEach((solution) => core.parse(solution));
+  }
+
+  for (const fixture of readDataset("variable-denominator-rational-equations.json")) {
+    assert.ok(fixture.excluded.length > 0);
+    fixture.solutions.forEach((solution) => core.parse(solution));
+    fixture.excluded.forEach((excluded) => core.parse(excluded));
   }
 });
 

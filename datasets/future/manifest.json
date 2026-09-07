@@ -24,6 +24,24 @@
       "capability": "simultaneous linear systems",
       "status": "unsupported",
       "cases": 20
+    },
+    {
+      "file": "complex-root-equations.json",
+      "capability": "complex-number roots",
+      "status": "unsupported",
+      "cases": 25
+    },
+    {
+      "file": "cubic-and-higher-equations.json",
+      "capability": "cubic and higher-degree polynomial solving",
+      "status": "unsupported",
+      "cases": 25
+    },
+    {
+      "file": "variable-denominator-rational-equations.json",
+      "capability": "domain-aware rational equations with variable denominators",
+      "status": "unsupported",
+      "cases": 25
     }
   ]
 }

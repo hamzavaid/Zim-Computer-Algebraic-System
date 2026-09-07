@@ -1,0 +1,88 @@
+[
+  { "equation": "1/x = 2", "variable": "x", "solutions": ["1/2"], "excluded": ["0"] },
+  { "equation": "(x + 1)/(x - 1) = 2", "variable": "x", "solutions": ["3"], "excluded": ["1"] },
+  { "equation": "2/(x + 1) = 3", "variable": "x", "solutions": ["-1/3"], "excluded": ["-1"] },
+  { "equation": "x/(x - 2) = 3", "variable": "x", "solutions": ["3"], "excluded": ["2"] },
+  {
+    "equation": "(2*x + 1)/(x - 3) = 4",
+    "variable": "x",
+    "solutions": ["13/2"],
+    "excluded": ["3"]
+  },
+  {
+    "equation": "(x - 5)/(2*x + 1) = 0",
+    "variable": "x",
+    "solutions": ["5"],
+    "excluded": ["-1/2"]
+  },
+  {
+    "equation": "1/(x + 2) = 1/(x - 2)",
+    "variable": "x",
+    "solutions": [],
+    "excluded": ["-2", "2"]
+  },
+  { "equation": "3/(x - 1) + 2 = 5", "variable": "x", "solutions": ["2"], "excluded": ["1"] },
+  { "equation": "x/(x + 1) + 1 = 2", "variable": "x", "solutions": [], "excluded": ["-1"] },
+  { "equation": "(x^2 - 9)/(x - 3) = 0", "variable": "x", "solutions": ["-3"], "excluded": ["3"] },
+  { "equation": "(x^2 - 1)/(x + 1) = 4", "variable": "x", "solutions": ["5"], "excluded": ["-1"] },
+  {
+    "equation": "1/x + 1/(x + 1) = 1",
+    "variable": "x",
+    "solutions": ["(1 - sqrt(5))/2", "(1 + sqrt(5))/2"],
+    "excluded": ["-1", "0"]
+  },
+  {
+    "equation": "1/(x - 2) - 1/(x + 2) = 1",
+    "variable": "x",
+    "solutions": ["-2*sqrt(2)", "2*sqrt(2)"],
+    "excluded": ["-2", "2"]
+  },
+  {
+    "equation": "2/x = x",
+    "variable": "x",
+    "solutions": ["-sqrt(2)", "sqrt(2)"],
+    "excluded": ["0"]
+  },
+  { "equation": "x + 1/x = 2", "variable": "x", "solutions": ["1"], "excluded": ["0"] },
+  {
+    "equation": "x + 1/x = 0",
+    "variable": "x",
+    "domain": "complex",
+    "solutions": ["-i", "i"],
+    "excluded": ["0"]
+  },
+  {
+    "equation": "1/(x^2 - 1) = 1/3",
+    "variable": "x",
+    "solutions": ["-2", "2"],
+    "excluded": ["-1", "1"]
+  },
+  {
+    "equation": "(x + 2)/(x^2 - 4) = 1",
+    "variable": "x",
+    "solutions": ["3"],
+    "excluded": ["-2", "2"]
+  },
+  { "equation": "(x^2 + x)/x = 5", "variable": "x", "solutions": ["4"], "excluded": ["0"] },
+  { "equation": "(x^3 - 1)/(x - 1) = 3", "variable": "x", "solutions": ["-2"], "excluded": ["1"] },
+  {
+    "equation": "1/(x - 1) + 1/(x + 1) = 1/2",
+    "variable": "x",
+    "solutions": ["2 - sqrt(5)", "2 + sqrt(5)"],
+    "excluded": ["-1", "1"]
+  },
+  {
+    "equation": "x/(x - 1) = x/(x + 1)",
+    "variable": "x",
+    "solutions": ["0"],
+    "excluded": ["-1", "1"]
+  },
+  {
+    "equation": "(x + 1)/(x - 1) = (x - 1)/(x + 1)",
+    "variable": "x",
+    "solutions": ["0"],
+    "excluded": ["-1", "1"]
+  },
+  { "equation": "1/(x^2) = 9", "variable": "x", "solutions": ["-1/3", "1/3"], "excluded": ["0"] },
+  { "equation": "1/(x - 1) = 0", "variable": "x", "solutions": [], "excluded": ["1"] }
+]
