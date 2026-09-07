@@ -1,0 +1,121 @@
+[
+  { "equation": "2^x = 8", "variable": "x", "solutions": ["3"], "family": "exponential" },
+  { "equation": "3^x = 81", "variable": "x", "solutions": ["4"], "family": "exponential" },
+  { "equation": "5^(x - 1) = 25", "variable": "x", "solutions": ["3"], "family": "exponential" },
+  { "equation": "10^x = 1000", "variable": "x", "solutions": ["3"], "family": "exponential" },
+  { "equation": "2^(2*x) = 16", "variable": "x", "solutions": ["2"], "family": "exponential" },
+  { "equation": "4^x = 2", "variable": "x", "solutions": ["1/2"], "family": "exponential" },
+  { "equation": "exp(x) = 1", "variable": "x", "solutions": ["0"], "family": "exponential" },
+  { "equation": "exp(x) = exp(1)", "variable": "x", "solutions": ["1"], "family": "exponential" },
+  {
+    "equation": "ln(x) = 0",
+    "variable": "x",
+    "solutions": ["1"],
+    "family": "logarithmic",
+    "domain": "x > 0"
+  },
+  {
+    "equation": "ln(x) = 2",
+    "variable": "x",
+    "solutions": ["exp(2)"],
+    "family": "logarithmic",
+    "domain": "x > 0"
+  },
+  {
+    "equation": "ln(x - 1) = 1",
+    "variable": "x",
+    "solutions": ["1 + exp(1)"],
+    "family": "logarithmic",
+    "domain": "x > 1"
+  },
+  {
+    "equation": "ln(2*x) = 3",
+    "variable": "x",
+    "solutions": ["exp(3)/2"],
+    "family": "logarithmic",
+    "domain": "x > 0"
+  },
+  {
+    "equation": "2*ln(x) = 2",
+    "variable": "x",
+    "solutions": ["exp(1)"],
+    "family": "logarithmic",
+    "domain": "x > 0"
+  },
+  {
+    "equation": "ln(x^2) = 4",
+    "variable": "x",
+    "solutions": ["-exp(2)", "exp(2)"],
+    "family": "logarithmic",
+    "domain": "x != 0"
+  },
+  {
+    "equation": "log(x) = 1",
+    "variable": "x",
+    "solutions": ["exp(1)"],
+    "family": "natural-logarithmic",
+    "domain": "x > 0"
+  },
+  {
+    "equation": "sin(x) = 0",
+    "variable": "x",
+    "solutions": ["k*pi"],
+    "family": "trigonometric",
+    "domain": "k is an integer"
+  },
+  {
+    "equation": "cos(x) = 1",
+    "variable": "x",
+    "solutions": ["2*k*pi"],
+    "family": "trigonometric",
+    "domain": "k is an integer"
+  },
+  {
+    "equation": "tan(x) = 1",
+    "variable": "x",
+    "solutions": ["pi/4 + k*pi"],
+    "family": "trigonometric",
+    "domain": "k is an integer"
+  },
+  {
+    "equation": "sqrt(x) = 5",
+    "variable": "x",
+    "solutions": ["25"],
+    "family": "radical",
+    "domain": "x >= 0"
+  },
+  {
+    "equation": "sqrt(x + 1) = x - 1",
+    "variable": "x",
+    "solutions": ["3"],
+    "family": "radical",
+    "domain": "x >= 1"
+  },
+  {
+    "equation": "x*exp(x) = 1",
+    "variable": "x",
+    "solutions": ["LambertW(1)"],
+    "family": "special-function"
+  },
+  {
+    "equation": "ln(x) = x",
+    "variable": "x",
+    "solutions": [],
+    "family": "transcendental",
+    "domain": "real"
+  },
+  { "equation": "2^x = 3", "variable": "x", "solutions": ["ln(3)/ln(2)"], "family": "exponential" },
+  {
+    "equation": "exp(2*x + 1) = 7",
+    "variable": "x",
+    "solutions": ["(ln(7) - 1)/2"],
+    "family": "exponential"
+  },
+  {
+    "equation": "ln(x) + ln(x - 1) = 0",
+    "variable": "x",
+    "solutions": ["(1 + sqrt(5))/2"],
+    "family": "logarithmic",
+    "domain": "x > 1"
+  }
+]

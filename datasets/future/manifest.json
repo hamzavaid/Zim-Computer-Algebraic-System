@@ -1,0 +1,21 @@
+{
+  "status": "unsupported-by-current-solver",
+  "datasets": [
+    {
+      "file": "quadratic-equations.json",
+      "capability": "quadratic and complex-root solving",
+      "cases": 25
+    },
+    {
+      "file": "transcendental-equations.json",
+      "capability": "exponential, logarithmic, trigonometric, radical, and special-function solving",
+      "cases": 25
+    },
+    {
+      "file": "rational-and-absolute-equations.json",
+      "capability": "domain-aware rational and piecewise absolute-value solving",
+      "cases": 25
+    },
+    { "file": "linear-systems.json", "capability": "simultaneous linear systems", "cases": 20 }
+  ]
+}

@@ -62,6 +62,7 @@ simplify(parse("x/x + x^0"), { nonZeroVariables: ["x"] });
 - `packages/core/src`: new Zim 2 production source
 - `packages/core/test`: unit, structural, regression, and invariant tests
 - `datasets/regression`: legacy, polynomial, and linear-equation regression datasets
+- `datasets/future`: validated cases for solver capabilities that are intentionally unsupported today
 - `legacy`: isolated pre-overhaul implementation and source datasets
 
 Quadratic solving, LaTeX output, the stable public API, CLI, and GUI are planned for later milestones.
