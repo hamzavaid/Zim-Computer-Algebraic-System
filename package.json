@@ -5,12 +5,20 @@
   "description": "Zim 2.0 exact symbolic mathematics engine",
   "type": "commonjs",
   "main": "packages/core/dist/index.js",
+  "bin": {
+    "zim": "packages/cli/dist/cli.js"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "clean": "node scripts/clean.js",
-    "build": "tsc -p packages/core/tsconfig.json",
-    "test": "npm run build && node --test packages/core/test/*.test.js",
-    "lint": "eslint packages/core/src",
-    "format:check": "prettier --check \"packages/core/**/*.{ts,js,json}\" \"docs/**/*.md\" README.md package.json",
+    "build:core": "tsc -p packages/core/tsconfig.json",
+    "build:cli": "tsc -p packages/cli/tsconfig.json",
+    "build": "npm run build:core && npm run build:cli",
+    "test": "npm run build && node --test packages/core/test/*.test.js packages/cli/test/*.test.js",
+    "lint": "eslint packages/core/src packages/cli/src",
+    "format:check": "prettier --check \"packages/**/*.{ts,js,json}\" \"datasets/**/*.json\" \"docs/**/*.md\" \".github/**/*.yml\" README.md package.json",
     "check": "npm run test && npm run lint && npm run format:check"
   },
   "engines": {
@@ -18,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
+    "@types/node": "^24.3.1",
     "eslint": "^9.35.0",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",

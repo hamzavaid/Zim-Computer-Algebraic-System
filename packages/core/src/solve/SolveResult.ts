@@ -11,6 +11,7 @@ export type SolveResult =
       readonly kind: "multiple-solutions";
       readonly variable: string;
       readonly values: readonly Expression[];
+      readonly verified: true;
     }
   | { readonly kind: "no-solution" }
   | { readonly kind: "identity" }

@@ -76,6 +76,36 @@ export function exactEquals(a: ExactNumber, b: ExactNumber): boolean {
   return an === bn && ad === bd;
 }
 
+export function compareExact(a: ExactNumber, b: ExactNumber): -1 | 0 | 1 {
+  const [an, ad] = parts(a);
+  const [bn, bd] = parts(b);
+  const difference = an * bd - bn * ad;
+  return difference < 0n ? -1 : difference > 0n ? 1 : 0;
+}
+
+function integerSquareRoot(value: bigint): bigint {
+  if (value < 0n) throw new RangeError("Square root of a negative integer is not real");
+  if (value < 2n) return value;
+  let current = 1n << ((BigInt(value.toString(2).length) + 1n) / 2n);
+  let next = (current + value / current) / 2n;
+  while (next < current) {
+    current = next;
+    next = (current + value / current) / 2n;
+  }
+  return current;
+}
+
+export function exactSquareRoot(value: ExactNumber): ExactNumber | undefined {
+  const [numerator, denominator] = parts(value);
+  if (numerator < 0n) return undefined;
+  const numeratorRoot = integerSquareRoot(numerator);
+  const denominatorRoot = integerSquareRoot(denominator);
+  return numeratorRoot * numeratorRoot === numerator &&
+    denominatorRoot * denominatorRoot === denominator
+    ? rational(numeratorRoot, denominatorRoot)
+    : undefined;
+}
+
 export function isZero(value: ExactNumber): boolean {
   return parts(value)[0] === 0n;
 }

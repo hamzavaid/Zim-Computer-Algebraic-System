@@ -1,4 +1,4 @@
 docs/
 node_modules/
-packages/core/dist/
+packages/*/dist/
 *.log

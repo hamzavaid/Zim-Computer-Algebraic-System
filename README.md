@@ -1,6 +1,6 @@
 # Zim 2.0 Computer Algebraic System
 
-Zim 2.0 is a greenfield TypeScript symbolic-mathematics engine. The implementation currently includes strict lexing, typed parsing, exact rational arithmetic, reusable AST visitors, deterministic normalization, modular fixed-point simplification, exact polynomial coefficient maps, and verified single-variable linear solving.
+Zim 2.0 is a TypeScript symbolic-mathematics engine with strict parsing, exact rational arithmetic, deterministic simplification, polynomial coefficient maps, verified linear and real-quadratic solving, a versioned backend API, and a command-line interface.
 
 The former JavaScript implementation is preserved under `legacy/` for comparison only. Production code in `packages/core` does not import it.
 
@@ -11,16 +11,15 @@ The former JavaScript implementation is preserved under `legacy/` for comparison
 
 ```sh
 npm install
-npm test
-npm run build
+npm run check
 ```
 
-`npm test` compiles the strict TypeScript project and runs the Node test suite. Generated files are written to `packages/core/dist` and are not committed.
+`npm run check` builds both packages, runs all tests, lints the TypeScript source, and checks formatting. Generated `dist` folders are not committed.
 
 ## Current API
 
 ```js
-const { parse, simplify, solveFor, format } = require("./packages/core/dist");
+const { parse, simplify, solve, format, toLatex, execute } = require("@zim/core");
 
 const ast = parse("1/3 + 1/6 + x * 0");
 const result = simplify(ast, { debug: true });
@@ -28,12 +27,33 @@ const result = simplify(ast, { debug: true });
 console.log(format(result.expression)); // 1/2
 console.log(result.steps.map((step) => step.rule));
 
-const solution = solveFor(parse("x / 3 + x / 6 = 5"), "x");
-console.log(solution.kind); // solution
-console.log(format(solution.value)); // 10
+const solution = solve(parse("x^2 = 4"), { variable: "x" });
+console.log(solution.kind); // multiple-solutions
+console.log(solution.values.map(format)); // ["-2", "2"]
+
+const response = execute({
+  version: "1.0",
+  operation: "solve",
+  expression: "x^2 = 2",
+  variable: "x",
+});
+console.log(JSON.stringify(response));
 ```
 
-The Week 5 API is intentionally pre-stable. A versioned consumer API and serialization contract are scheduled for Week 9.
+The public package also exports `toLatex()`. API v1 converts all `bigint` fields to decimal strings, so responses are safe to send through JSON. Its machine-readable schema is shipped at `packages/core/schema/api-v1.schema.json`.
+
+## CLI
+
+```sh
+npm run build
+node packages/cli/dist/cli.js parse "x^2 = 4"
+node packages/cli/dist/cli.js simplify --trace "1 * (2 + 3)"
+node packages/cli/dist/cli.js solve --variable x "x^2 = 4"
+node packages/cli/dist/cli.js latex "x^2 = 1/4"
+node packages/cli/dist/cli.js repl
+```
+
+Exit code `0` means success, `2` means invalid CLI/input syntax, and `3` means the expression parsed correctly but solving is unsupported.
 
 ## Supported syntax
 
@@ -62,7 +82,7 @@ simplify(parse("x/x + x^0"), { nonZeroVariables: ["x"] });
 - `packages/core/src`: new Zim 2 production source
 - `packages/core/test`: unit, structural, regression, and invariant tests
 - `datasets/regression`: legacy, polynomial, and linear-equation regression datasets
-- `datasets/future`: validated cases for solver capabilities that are intentionally unsupported today
+- `datasets/future`: advanced solver fixtures; real quadratic cases are supported, while other families remain future work
 - `legacy`: isolated pre-overhaul implementation and source datasets
 
-Quadratic solving, LaTeX output, the stable public API, CLI, and GUI are planned for later milestones.
+Complex roots, cubic and higher-degree solving, rational equations with variable denominators, transcendental solving, simultaneous systems, and the GUI remain outside the current boundary.

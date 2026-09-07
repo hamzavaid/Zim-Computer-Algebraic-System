@@ -46,6 +46,13 @@ function addPolynomials(left: Polynomial, right: Polynomial, subtract = false): 
   return create(left.variable, result);
 }
 
+export function subtractPolynomials(left: Polynomial, right: Polynomial): Polynomial {
+  if (left.variable !== right.variable) {
+    throw new Error("Cannot subtract polynomials with different variables");
+  }
+  return addPolynomials(left, right, true);
+}
+
 function multiplyPolynomials(left: Polynomial, right: Polynomial): Polynomial {
   const result = new Map<number, ExactNumber>();
   for (const [leftExponent, leftCoefficient] of left.coefficients) {

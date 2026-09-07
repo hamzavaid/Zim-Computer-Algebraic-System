@@ -1,5 +1,5 @@
-import { coefficient, coefficientMap, degree } from "../algebra/polynomial";
-import { divideExact, ExactNumber, isZero, negateExact, subtractExact } from "../ast/rational";
+import { coefficient, coefficientMap, degree, subtractPolynomials } from "../algebra/polynomial";
+import { divideExact, isZero, negateExact } from "../ast/rational";
 import { Equation, Expression } from "../ast/types";
 import { simplifyExpression } from "../simplify/simplify";
 import { substitute } from "../visitors/substitute";
@@ -26,20 +26,13 @@ export function solveLinearEquation(equation: Equation, variableName: string): S
   const right = coefficientMap(equation.right, variableName);
   if (right.kind === "unsupported") return right;
 
-  const leftDegree = degree(left.polynomial);
-  const rightDegree = degree(right.polynomial);
-  if ((leftDegree ?? 0) > 1 || (rightDegree ?? 0) > 1) {
+  const difference = subtractPolynomials(left.polynomial, right.polynomial);
+  if ((degree(difference) ?? 0) > 1) {
     return { kind: "unsupported", reason: "Equation is nonlinear" };
   }
 
-  const variableCoefficient = simplifyExactDifference(
-    coefficient(left.polynomial, 1),
-    coefficient(right.polynomial, 1),
-  );
-  const constantDifference = simplifyExactDifference(
-    coefficient(left.polynomial, 0),
-    coefficient(right.polynomial, 0),
-  );
+  const variableCoefficient = coefficient(difference, 1);
+  const constantDifference = coefficient(difference, 0);
 
   if (isZero(variableCoefficient)) {
     return isZero(constantDifference) ? { kind: "identity" } : { kind: "no-solution" };
@@ -50,8 +43,4 @@ export function solveLinearEquation(equation: Equation, variableName: string): S
     return { kind: "unsupported", reason: "Computed solution could not be verified" };
   }
   return { kind: "solution", variable: variableName, value, verified: true };
-}
-
-function simplifyExactDifference(left: ExactNumber, right: ExactNumber): ExactNumber {
-  return subtractExact(left, right);
 }

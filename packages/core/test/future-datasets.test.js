@@ -10,21 +10,18 @@ const readDataset = (name) =>
 
 test("future dataset manifest matches every dataset file", () => {
   const manifest = readDataset("manifest.json");
-  assert.equal(manifest.status, "unsupported-by-current-solver");
+  assert.equal(manifest.status, "future-capability-corpus");
   assert.equal(manifest.datasets.length, 4);
   for (const entry of manifest.datasets) {
     const rows = readDataset(entry.file);
     assert.equal(rows.length, entry.cases, entry.file);
     assert.ok(entry.capability.length > 0);
+    assert.ok(["supported-real-only", "unsupported"].includes(entry.status));
   }
 });
 
 test("future single-equation datasets parse but remain explicitly unsupported", () => {
-  for (const file of [
-    "quadratic-equations.json",
-    "transcendental-equations.json",
-    "rational-and-absolute-equations.json",
-  ]) {
+  for (const file of ["transcendental-equations.json", "rational-and-absolute-equations.json"]) {
     for (const fixture of readDataset(file)) {
       const equation = core.parse(fixture.equation);
       const result = core.solveFor(equation, fixture.variable);

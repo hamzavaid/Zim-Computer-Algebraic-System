@@ -46,6 +46,7 @@ export function evaluate(expression: Expression, environment: NumericEnvironment
       if (expression.name === "abs") return Math.abs(value);
       if (expression.name === "ln" || expression.name === "log") return Math.log(value);
       if (expression.name === "exp") return Math.exp(value);
+      if (expression.name === "sqrt") return Math.sqrt(value);
       throw new Error(`Unsupported numeric function '${expression.name}'`);
     }
   }

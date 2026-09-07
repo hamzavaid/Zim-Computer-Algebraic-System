@@ -1,7 +1,16 @@
 {
   "name": "@zim/core",
   "version": "2.0.0-alpha.1",
-  "private": true,
   "main": "dist/index.js",
-  "types": "dist/index.d.ts"
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "schema"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    }
+  }
 }

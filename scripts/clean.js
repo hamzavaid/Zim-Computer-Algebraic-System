@@ -2,10 +2,13 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const workspace = path.resolve(__dirname, "..");
-const target = path.resolve(workspace, "packages/core/dist");
+const targets = ["packages/core/dist", "packages/cli/dist"].map((relativePath) =>
+  path.resolve(workspace, relativePath),
+);
 
-if (!target.startsWith(`${workspace}${path.sep}`)) {
-  throw new Error("Refusing to clean a path outside the workspace");
+for (const target of targets) {
+  if (!target.startsWith(`${workspace}${path.sep}`)) {
+    throw new Error("Refusing to clean a path outside the workspace");
+  }
+  fs.rmSync(target, { recursive: true, force: true });
 }
-
-fs.rmSync(target, { recursive: true, force: true });

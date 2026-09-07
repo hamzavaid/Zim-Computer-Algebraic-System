@@ -1,0 +1,14 @@
+{
+  "name": "@zim/cli",
+  "version": "2.0.0-alpha.1",
+  "private": true,
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "zim": "dist/cli.js"
+  },
+  "dependencies": {
+    "@zim/core": "2.0.0-alpha.1"
+  }
+}

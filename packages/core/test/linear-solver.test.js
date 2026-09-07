@@ -52,7 +52,7 @@ test("returns explicit unsupported results outside the linear boundary", () => {
     kind: "unsupported",
     reason: "Solving requires an equation",
   });
-  assert.match(solveFor(parse("x^2 = 4"), "x").reason, /nonlinear/i);
+  assert.match(solveFor(parse("x^3 = 8"), "x").reason, /degree 3/i);
   assert.match(solveFor(parse("x + y = 2"), "x").reason, /variable 'y'/i);
   assert.match(solveFor(parse("ln(x) = 1"), "x").reason, /not polynomial/i);
   assert.match(solveFor(parse("x = 1"), "not valid").reason, /invalid variable/i);
