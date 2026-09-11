@@ -1,4 +1,4 @@
-import { SyntaxTree } from "../ast/types";
+import { equation, Equation, SyntaxTree, variable } from "../ast/types";
 import { format } from "../format/formatter";
 import { toLatex } from "../format/latex";
 import { solveFor } from "../solve/solveFor";
@@ -13,6 +13,36 @@ export interface SolveOptions {
 
 export function solve(tree: SyntaxTree, options: SolveOptions): SolveResult {
   return solveFor(tree, options.variable, { domain: options.domain });
+}
+
+export interface SolveTraceStep {
+  readonly rule: "verified-solution";
+  readonly before: Equation;
+  readonly after: Equation;
+}
+
+export interface DetailedSolveResult {
+  readonly result: SolveResult;
+  readonly steps: readonly SolveTraceStep[];
+}
+
+export function solveWithSteps(tree: SyntaxTree, options: SolveOptions): DetailedSolveResult {
+  const result = solve(tree, options);
+  if (tree.kind !== "equation") return { result, steps: [] };
+  const values =
+    result.kind === "solution"
+      ? [result.value]
+      : result.kind === "multiple-solutions"
+        ? result.values
+        : [];
+  return {
+    result,
+    steps: values.map((value) => ({
+      rule: "verified-solution",
+      before: tree,
+      after: equation(variable(options.variable), value),
+    })),
+  };
 }
 
 export function formatSolveResult(result: SolveResult): string {

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Zim exact symbolic mathematics interface" />
+    <title>Zim 2.0</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Skip to workspace</a>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">Symbolic mathematics workspace</p>
+        <h1>Zim 2.0</h1>
+      </div>
+      <button id="theme-toggle" class="secondary" type="button" aria-pressed="false">
+        Toggle theme
+      </button>
+    </header>
+
+    <main id="workspace" class="workspace">
+      <section class="card editor" aria-labelledby="editor-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Input</p>
+            <h2 id="editor-heading">Expression editor</h2>
+          </div>
+          <span id="status-output" role="status" aria-live="polite">Ready</span>
+        </div>
+        <label for="expression-input">Expression or equation</label>
+        <textarea
+          id="expression-input"
+          rows="4"
+          maxlength="4096"
+          spellcheck="false"
+          placeholder="Try: x^2 + 1 = 0"
+        ></textarea>
+        <p class="hint">
+          Use explicit multiplication, such as <code>2*x</code>. Ctrl/⌘ + Enter solves.
+        </p>
+        <div class="solve-options">
+          <label for="variable-input">Solve for</label>
+          <input id="variable-input" value="x" autocomplete="off" />
+          <label for="domain-input">Domain</label>
+          <select id="domain-input">
+            <option value="real">Real</option>
+            <option value="complex">Complex</option>
+          </select>
+        </div>
+        <div class="actions" aria-label="Expression actions">
+          <button type="button" data-operation="simplify">Simplify</button>
+          <button type="button" data-operation="solve">Solve</button>
+          <button type="button" data-operation="parse" class="secondary">Parse tree</button>
+          <button type="button" id="clear-button" class="quiet">Clear</button>
+        </div>
+        <p id="error-output" class="error" role="alert" hidden></p>
+      </section>
+
+      <section class="card result" aria-labelledby="result-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Exact output</p>
+            <h2 id="result-heading">Result</h2>
+          </div>
+          <div class="copy-actions" aria-label="Copy result">
+            <button type="button" class="quiet" data-copy="text">Copy text</button>
+            <button type="button" class="quiet" data-copy="latex">Copy LaTeX</button>
+            <button type="button" class="quiet" data-copy="json">Copy JSON</button>
+          </div>
+        </div>
+        <div id="math-output" class="math-result" aria-hidden="true"></div>
+        <output id="result-output" class="accessible-result" aria-live="polite"></output>
+        <details>
+          <summary>LaTeX source</summary>
+          <pre id="latex-output" class="code-output"></pre>
+        </details>
+      </section>
+
+      <section class="card steps" aria-labelledby="steps-heading">
+        <p class="eyebrow">Backend trace</p>
+        <h2 id="steps-heading">Step by step</h2>
+        <ol id="steps-output" class="steps-list"></ol>
+      </section>
+
+      <section class="card tree-panel" aria-labelledby="tree-heading">
+        <p class="eyebrow">Structure</p>
+        <h2 id="tree-heading">Expression tree</h2>
+        <div id="tree-output" class="tree-output"></div>
+      </section>
+
+      <aside class="card history" aria-labelledby="history-heading">
+        <p class="eyebrow">Recent work</p>
+        <h2 id="history-heading">History</h2>
+        <ul id="history-output"></ul>
+      </aside>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "@zim/gui",
+  "version": "2.0.0-alpha.1",
+  "private": true,
+  "main": "dist/server.js",
+  "types": "dist/server.d.ts",
+  "files": [
+    "dist",
+    "public"
+  ],
+  "scripts": {
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@zim/core": "2.0.0-alpha.1"
+  }
+}

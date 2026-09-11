@@ -15,10 +15,12 @@
     "clean": "node scripts/clean.js",
     "build:core": "tsc -p packages/core/tsconfig.json",
     "build:cli": "tsc -p packages/cli/tsconfig.json",
-    "build": "npm run build:core && npm run build:cli",
-    "test": "npm run build && node --test packages/core/test/*.test.js packages/cli/test/*.test.js",
-    "lint": "eslint packages/core/src packages/cli/src",
-    "format:check": "prettier --check \"packages/**/*.{ts,js,json}\" \"datasets/**/*.json\" \".github/**/*.yml\" README.md package.json",
+    "build:gui": "tsc -p packages/gui/tsconfig.json",
+    "build": "npm run build:core && npm run build:cli && npm run build:gui",
+    "test": "npm run build && node --test packages/core/test/*.test.js packages/cli/test/*.test.js packages/gui/test/*.test.js",
+    "lint": "eslint packages/core/src packages/cli/src packages/gui/src",
+    "start:gui": "npm run build && node packages/gui/dist/server.js",
+    "format:check": "prettier --check \"packages/**/*.{ts,js,json,html,css}\" \"datasets/**/*.json\" \".github/**/*.yml\" README.md package.json",
     "check": "npm run test && npm run lint && npm run format:check"
   },
   "engines": {

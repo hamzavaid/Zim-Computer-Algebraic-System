@@ -1,0 +1,147 @@
+[
+  {
+    "id": "w11-direct-parse",
+    "week": 11,
+    "transport": "direct",
+    "request": { "version": "1.0", "operation": "parse", "expression": "x + 1" },
+    "expect": { "status": "ok", "text": "x + 1" }
+  },
+  {
+    "id": "w11-direct-simplify",
+    "week": 11,
+    "transport": "direct",
+    "request": {
+      "version": "1.0",
+      "operation": "simplify",
+      "expression": "1 * (2 + 3)",
+      "includeSteps": true
+    },
+    "expect": { "status": "ok", "text": "5", "steps": true }
+  },
+  {
+    "id": "w11-direct-solve",
+    "week": 11,
+    "transport": "direct",
+    "request": { "version": "1.0", "operation": "solve", "expression": "x^2 = 4", "variable": "x" },
+    "expect": { "status": "ok", "text": "x = -2, 2" }
+  },
+  {
+    "id": "w11-protocol-solve",
+    "week": 11,
+    "transport": "http",
+    "request": {
+      "version": "1.0",
+      "operation": "solve",
+      "expression": "2*x + 1 = 7",
+      "variable": "x"
+    },
+    "expect": { "status": "ok", "text": "x = 3" }
+  },
+  {
+    "id": "w11-public-api-isolation",
+    "week": 11,
+    "transport": "architecture",
+    "expect": { "guiImports": "@zim/core", "coreImportsGui": false }
+  },
+  {
+    "id": "w12-exact-result",
+    "week": 12,
+    "transport": "http",
+    "request": { "version": "1.0", "operation": "solve", "expression": "3*x = 1", "variable": "x" },
+    "expect": { "status": "ok", "text": "x = 1/3", "latex": true }
+  },
+  {
+    "id": "w12-complex-domain",
+    "week": 12,
+    "transport": "http",
+    "request": {
+      "version": "1.0",
+      "operation": "solve",
+      "expression": "x^2 + 1 = 0",
+      "variable": "x",
+      "domain": "complex"
+    },
+    "expect": { "status": "ok", "text": "x = -i, i" }
+  },
+  {
+    "id": "w12-parse-tree",
+    "week": 12,
+    "transport": "http",
+    "request": { "version": "1.0", "operation": "parse", "expression": "(x + 1)^2" },
+    "expect": { "status": "ok", "ast": true }
+  },
+  {
+    "id": "w12-positioned-error",
+    "week": 12,
+    "transport": "http",
+    "request": { "version": "1.0", "operation": "parse", "expression": "x @ 2" },
+    "expect": { "status": "error", "errorCode": "LEX_ERROR", "position": true }
+  },
+  {
+    "id": "w12-clear-action",
+    "week": 12,
+    "transport": "ui",
+    "expect": { "element": "clear-button" }
+  },
+  {
+    "id": "w12-history-panel",
+    "week": 12,
+    "transport": "ui",
+    "expect": { "element": "history-output" }
+  },
+  {
+    "id": "w12-accessible-status",
+    "week": 12,
+    "transport": "ui",
+    "expect": { "element": "status-output", "attribute": "aria-live" }
+  },
+  {
+    "id": "w13-simplification-steps",
+    "week": 13,
+    "transport": "http",
+    "request": {
+      "version": "1.0",
+      "operation": "simplify",
+      "expression": "1 * (x + 0)",
+      "includeSteps": true
+    },
+    "expect": { "status": "ok", "steps": true }
+  },
+  {
+    "id": "w13-solve-steps",
+    "week": 13,
+    "transport": "http",
+    "request": {
+      "version": "1.0",
+      "operation": "solve",
+      "expression": "x^2 = 4",
+      "variable": "x",
+      "includeSteps": true
+    },
+    "expect": { "status": "ok", "steps": true, "stepRule": "verified-solution" }
+  },
+  {
+    "id": "w13-tree-visualizer",
+    "week": 13,
+    "transport": "ui",
+    "expect": { "element": "tree-output" }
+  },
+  {
+    "id": "w13-copy-formats",
+    "week": 13,
+    "transport": "ui",
+    "expect": { "copyFormats": ["text", "latex", "json"] }
+  },
+  {
+    "id": "w13-theme-accessibility",
+    "week": 13,
+    "transport": "ui",
+    "expect": { "element": "theme-toggle", "attribute": "aria-pressed" }
+  },
+  {
+    "id": "w13-large-request-guard",
+    "week": 13,
+    "transport": "guard",
+    "expect": { "httpStatus": 413, "errorCode": "REQUEST_TOO_LARGE" }
+  }
+]

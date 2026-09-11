@@ -1,0 +1,11 @@
+{
+  "status": "implemented-gui-milestones",
+  "datasets": [
+    {
+      "file": "week-11-13.json",
+      "capability": "GUI architecture, primary workflows, explainability, accessibility, and safety",
+      "status": "supported",
+      "cases": 18
+    }
+  ]
+}

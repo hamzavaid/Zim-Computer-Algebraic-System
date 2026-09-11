@@ -16,6 +16,14 @@ npm run check
 
 `npm run check` builds both packages, runs all tests, lints the TypeScript source, and checks formatting. Generated `dist` folders are not committed.
 
+To run the local graphical interface:
+
+```sh
+npm run start:gui
+```
+
+Then open `http://127.0.0.1:3210`. The interface communicates exclusively through the serialized public API and renders returned AST values with native MathML.
+
 ## Current API
 
 ```js
@@ -47,6 +55,8 @@ console.log(JSON.stringify(response));
 ```
 
 The public package also exports `toLatex()`. API v1 converts all `bigint` fields to decimal strings, so responses are safe to send through JSON. Its machine-readable schema is shipped at `packages/core/schema/api-v1.schema.json`.
+
+Solve requests can set `includeSteps: true` to receive backend-generated verified-solution steps. Simplification requests return their applied rewrite rules through the same option.
 
 ## CLI
 
@@ -99,8 +109,8 @@ General irreducible cubic/quartic formulas, numerical root approximation, nonlin
 
 - `packages/core/src`: new Zim 2 production source
 - `packages/core/test`: unit, structural, regression, and invariant tests
+- `packages/gui`: local web GUI, direct/protocol clients, and end-to-end tests
 - `datasets/regression`: legacy, polynomial, and linear-equation regression datasets
 - `datasets/future`: advanced solver fixtures and capability-boundary cases
+- `datasets/gui`: Week 11-13 GUI workflow and safety fixtures
 - `legacy`: isolated pre-overhaul implementation and source datasets
-
-The GUI remains outside the current boundary.

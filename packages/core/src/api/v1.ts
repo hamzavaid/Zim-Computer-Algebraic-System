@@ -7,9 +7,8 @@ import {
   serializeSystemSolveResult,
 } from "../serialization/serialize";
 import { simplify } from "../simplify/simplify";
-import { solveFor } from "../solve/solveFor";
 import { ZimError } from "../errors/ZimError";
-import { formatSolveResult, latexSolveResult } from "./public";
+import { formatSolveResult, latexSolveResult, solveWithSteps } from "./public";
 import { solveSystem } from "../solve/systemSolver";
 import { formatSystemSolveResult } from "./public";
 
@@ -128,7 +127,11 @@ export function execute(request: ApiRequest): ApiResponse {
     }
     if (request.operation === "solve") {
       if (!request.variable) return error("VARIABLE_REQUIRED", "Solve requests require a variable");
-      const solved = solveFor(tree, request.variable, { domain: request.domain });
+      const detailed = solveWithSteps(tree, {
+        variable: request.variable,
+        domain: request.domain,
+      });
+      const solved = detailed.result;
       return {
         version: API_VERSION,
         status: "ok",
@@ -136,6 +139,13 @@ export function execute(request: ApiRequest): ApiResponse {
           solution: serializeSolveResult(solved),
           text: formatSolveResult(solved),
           latex: latexSolveResult(solved),
+          steps: request.includeSteps
+            ? detailed.steps.map((step) => ({
+                rule: step.rule,
+                before: serializeSyntaxTree(step.before),
+                after: serializeSyntaxTree(step.after),
+              }))
+            : [],
         },
       };
     }
