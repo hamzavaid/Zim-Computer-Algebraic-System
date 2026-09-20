@@ -50,5 +50,12 @@ function render(expression: Expression, parentPrecedence = 0): string {
 }
 
 export function toLatex(tree: SyntaxTree): string {
-  return tree.kind === "equation" ? `${render(tree.left)} = ${render(tree.right)}` : render(tree);
+  if (tree.kind === "equation") return `${render(tree.left)} = ${render(tree.right)}`;
+  if (tree.kind === "relation") {
+    const operator = { "!=": "\\ne", "<": "<", "<=": "\\le", ">": ">", ">=": "\\ge" }[
+      tree.operator
+    ];
+    return `${render(tree.left)} ${operator} ${render(tree.right)}`;
+  }
+  return render(tree);
 }

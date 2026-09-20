@@ -5,6 +5,7 @@ import { Assumption, AssumptionSet, Domain } from "./types";
 export function createAssumptionSet(assumptions: readonly Assumption[] = []): AssumptionSet {
   const positive = new Set<string>();
   const negative = new Set<string>();
+  const zero = new Set<string>();
   const domains = new Map<string, Domain>();
   const contradictions: string[] = [];
   for (const assumption of assumptions) {
@@ -23,10 +24,16 @@ export function createAssumptionSet(assumptions: readonly Assumption[] = []): As
       domains.set(assumption.symbol, assumption.domain);
     } else if (assumption.kind === "positive") positive.add(canonicalKey(assumption.expression));
     else if (assumption.kind === "negative") negative.add(canonicalKey(assumption.expression));
+    else if (assumption.kind === "zero") zero.add(canonicalKey(assumption.expression));
   }
   for (const key of positive) {
     if (negative.has(key))
       contradictions.push(`Expression '${key}' cannot be positive and negative`);
+  }
+  for (const key of zero) {
+    if (positive.has(key) || negative.has(key)) {
+      contradictions.push(`Expression '${key}' cannot be zero and have a strict sign`);
+    }
   }
   return {
     assumptions: [...assumptions],

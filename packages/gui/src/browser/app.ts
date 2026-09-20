@@ -84,6 +84,15 @@ function serializedExpression(value: unknown): MathMLElement {
     );
     return row;
   }
+  if (kind === "relation") {
+    const row = mathElement("mrow");
+    row.append(
+      serializedExpression(expression.left),
+      mathElement("mo", String(expression.operator)),
+      serializedExpression(expression.right),
+    );
+    return row;
+  }
   if (kind === "binary") {
     if (expression.operator === "/") {
       const fraction = mathElement("mfrac");

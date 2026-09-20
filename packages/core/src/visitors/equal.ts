@@ -46,5 +46,14 @@ export function treeEquals(a: SyntaxTree, b: SyntaxTree): boolean {
       expressionEquals(a.right, b.right)
     );
   }
+  if (a.kind === "relation" || b.kind === "relation") {
+    return (
+      a.kind === "relation" &&
+      b.kind === "relation" &&
+      a.operator === b.operator &&
+      expressionEquals(a.left, b.left) &&
+      expressionEquals(a.right, b.right)
+    );
+  }
   return expressionEquals(a, b);
 }

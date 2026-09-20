@@ -25,7 +25,14 @@ export interface SerializedEquation {
   readonly right: SerializedExpression;
 }
 
-export type SerializedSyntaxTree = SerializedExpression | SerializedEquation;
+export interface SerializedRelation {
+  readonly kind: "relation";
+  readonly operator: string;
+  readonly left: SerializedExpression;
+  readonly right: SerializedExpression;
+}
+
+export type SerializedSyntaxTree = SerializedExpression | SerializedEquation | SerializedRelation;
 
 export function serializeExpression(expression: Expression): SerializedExpression {
   switch (expression.kind) {
@@ -62,13 +69,14 @@ export function serializeExpression(expression: Expression): SerializedExpressio
 }
 
 export function serializeSyntaxTree(tree: SyntaxTree): SerializedSyntaxTree {
-  return tree.kind === "equation"
-    ? {
-        kind: "equation",
-        left: serializeExpression(tree.left),
-        right: serializeExpression(tree.right),
-      }
-    : serializeExpression(tree);
+  if (tree.kind === "equation" || tree.kind === "relation") {
+    return {
+      ...tree,
+      left: serializeExpression(tree.left),
+      right: serializeExpression(tree.right),
+    };
+  }
+  return serializeExpression(tree);
 }
 
 export type SerializedSolveResult =

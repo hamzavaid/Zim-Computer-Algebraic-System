@@ -1,6 +1,6 @@
 {
   "name": "zim-computer-algebraic-system",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "description": "Zim 2.0 exact symbolic mathematics engine",
   "type": "commonjs",

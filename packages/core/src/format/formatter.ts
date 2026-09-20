@@ -43,9 +43,11 @@ function formatExpression(expression: Expression, parent = 0, rightChild = false
 }
 
 export function format(tree: SyntaxTree): string {
-  return tree.kind === "equation"
-    ? `${formatExpression(tree.left)} = ${formatExpression(tree.right)}`
-    : formatExpression(tree);
+  if (tree.kind === "equation")
+    return `${formatExpression(tree.left)} = ${formatExpression(tree.right)}`;
+  if (tree.kind === "relation")
+    return `${formatExpression(tree.left)} ${tree.operator} ${formatExpression(tree.right)}`;
+  return formatExpression(tree);
 }
 
 export const canonicalKey = (expression: Expression): string => formatExpression(expression);

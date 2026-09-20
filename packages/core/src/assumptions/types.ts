@@ -7,6 +7,7 @@ export type Assumption =
   | { readonly kind: "nonzero"; readonly expression: Expression }
   | { readonly kind: "positive"; readonly expression: Expression }
   | { readonly kind: "negative"; readonly expression: Expression }
+  | { readonly kind: "zero"; readonly expression: Expression }
   | {
       readonly kind: "interval";
       readonly symbol: string;

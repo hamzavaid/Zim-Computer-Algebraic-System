@@ -1,4 +1,14 @@
-import { binary, equation, Expression, func, SyntaxTree, unary, variable } from "../ast/types";
+import {
+  binary,
+  equation,
+  Expression,
+  func,
+  relation,
+  RelationOperator,
+  SyntaxTree,
+  unary,
+  variable,
+} from "../ast/types";
 import { decimalToExact } from "../ast/rational";
 import { lex } from "../lexer/Lexer";
 import { Token } from "../lexer/Token";
@@ -14,6 +24,14 @@ const relationTokens: readonly TokenType[] = [
   "greaterEqual",
 ];
 
+const relationOperators: Readonly<Partial<Record<TokenType, RelationOperator>>> = {
+  notEqual: "!=",
+  less: "<",
+  lessEqual: "<=",
+  greater: ">",
+  greaterEqual: ">=",
+};
+
 export class Parser {
   private current = 0;
   private readonly tokens: Token[];
@@ -25,16 +43,12 @@ export class Parser {
     if (this.check("eof")) throw this.error(this.peek(), "Expected an expression");
     const left = this.additive();
     if (relationTokens.includes(this.peek().type)) {
-      const relation = this.advance();
-      if (relation.type !== "equal") {
-        throw this.error(
-          relation,
-          `Relation '${relation.lexeme}' is tokenized but only equations using '=' are supported`,
-        );
-      }
+      const relationToken = this.advance();
       const right = this.additive();
-      this.consume("eof", "Unexpected input after equation");
-      return equation(left, right);
+      this.consume("eof", "Unexpected input after relation");
+      return relationToken.type === "equal"
+        ? equation(left, right)
+        : relation(relationOperators[relationToken.type]!, left, right);
     }
     this.consume("eof", "Unexpected input after expression");
     return left;

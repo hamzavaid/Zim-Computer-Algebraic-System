@@ -69,11 +69,12 @@ export function normalizeExpression(expression: Expression): Expression {
 }
 
 export function normalize(tree: SyntaxTree): SyntaxTree {
-  return tree.kind === "equation"
-    ? {
-        kind: "equation",
-        left: normalizeExpression(tree.left),
-        right: normalizeExpression(tree.right),
-      }
-    : normalizeExpression(tree);
+  if (tree.kind === "equation" || tree.kind === "relation") {
+    return {
+      ...tree,
+      left: normalizeExpression(tree.left),
+      right: normalizeExpression(tree.right),
+    };
+  }
+  return normalizeExpression(tree);
 }

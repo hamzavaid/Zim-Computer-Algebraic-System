@@ -1,4 +1,4 @@
-import { Equation, Expression, SyntaxTree } from "../ast/types";
+import { Expression, SyntaxTree } from "../ast/types";
 
 export type ExpressionVisitor = (expression: Expression) => void;
 
@@ -14,7 +14,7 @@ export function visitExpression(expression: Expression, visitor: ExpressionVisit
 }
 
 export function visit(tree: SyntaxTree, visitor: ExpressionVisitor): void {
-  if (tree.kind === "equation") {
+  if (tree.kind === "equation" || tree.kind === "relation") {
     visitExpression(tree.left, visitor);
     visitExpression(tree.right, visitor);
   } else visitExpression(tree, visitor);
@@ -43,9 +43,9 @@ export function mapTree(
   tree: SyntaxTree,
   transform: (expression: Expression) => Expression,
 ): SyntaxTree {
-  if (tree.kind !== "equation") return mapExpression(tree, transform);
-  const result: Equation = {
-    kind: "equation",
+  if (tree.kind !== "equation" && tree.kind !== "relation") return mapExpression(tree, transform);
+  const result: SyntaxTree = {
+    ...tree,
     left: mapExpression(tree.left, transform),
     right: mapExpression(tree.right, transform),
   };

@@ -4,7 +4,9 @@ import { ResourceBudget, RuntimeGuardError } from "../runtime/budget";
 import { parse } from "../parser/Parser";
 import { analyzePolynomialRoots } from "../numeric/polynomialRoots";
 import { polynomialToExpression } from "../algebra/polynomial";
-import { serializeSyntaxTree } from "../serialization/serialize";
+import { serializeExpression, serializeSyntaxTree } from "../serialization/serialize";
+import { solveRelation } from "../solve/relationSolver";
+import { serializeSolutionSet } from "../sets/SolutionSet";
 
 export const API_VERSION_V2 = "2.0-beta" as const;
 
@@ -38,6 +40,11 @@ export type ApiV2Request =
       readonly variable: string;
     })
   | (BaseRequest & {
+      readonly operation: "solveRelation";
+      readonly relation: string;
+      readonly variable: string;
+    })
+  | (BaseRequest & {
       readonly operation: "solveSystem";
       readonly expressions: readonly string[];
       readonly variables: readonly string[];
@@ -65,7 +72,11 @@ function requestId(request: ApiV2Request): string {
 }
 
 function v1Request(request: ApiV2Request): ApiRequest | undefined {
-  if (request.operation === "capabilities" || request.operation === "analyzePolynomial")
+  if (
+    request.operation === "capabilities" ||
+    request.operation === "analyzePolynomial" ||
+    request.operation === "solveRelation"
+  )
     return undefined;
   if (request.operation === "solveSystem") {
     return {
@@ -123,7 +134,7 @@ export function executeV2(request: ApiV2Request): ApiV2Response {
     if (request.operation === "analyzePolynomial") {
       const tree = parse(request.expression);
       const analysis =
-        tree.kind === "equation"
+        tree.kind === "equation" || tree.kind === "relation"
           ? ({ kind: "unsupported", reason: "Polynomial analysis expects an expression" } as const)
           : analyzePolynomialRoots(tree, request.variable);
       const result =
@@ -148,6 +159,25 @@ export function executeV2(request: ApiV2Request): ApiV2Response {
               ? "budget-exceeded"
               : "unsupported",
         result,
+        diagnostics: { operation: request.operation },
+      });
+    }
+    if (request.operation === "solveRelation") {
+      const solved = solveRelation(parse(request.relation), { variable: request.variable });
+      return finish({
+        status: "ok",
+        result: {
+          ...solved,
+          solution: serializeSolutionSet(solved.solution),
+          accepted: solved.accepted.map((entry) => ({
+            ...entry,
+            candidate: serializeExpression(entry.candidate),
+          })),
+          rejected: solved.rejected.map((entry) => ({
+            ...entry,
+            candidate: serializeExpression(entry.candidate),
+          })),
+        },
         diagnostics: { operation: request.operation },
       });
     }

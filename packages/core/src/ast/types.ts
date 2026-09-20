@@ -45,7 +45,16 @@ export interface Equation {
   readonly right: Expression;
 }
 
-export type SyntaxTree = Expression | Equation;
+export type RelationOperator = "!=" | "<" | "<=" | ">" | ">=";
+
+export interface Relation {
+  readonly kind: "relation";
+  readonly operator: RelationOperator;
+  readonly left: Expression;
+  readonly right: Expression;
+}
+
+export type SyntaxTree = Expression | Equation | Relation;
 
 export const constant = (value: bigint | number): Constant => ({
   kind: "constant",
@@ -77,3 +86,9 @@ export const equation = (left: Expression, right: Expression): Equation => ({
   left,
   right,
 });
+
+export const relation = (
+  operator: RelationOperator,
+  left: Expression,
+  right: Expression,
+): Relation => ({ kind: "relation", operator, left, right });

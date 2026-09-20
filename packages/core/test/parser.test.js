@@ -28,6 +28,9 @@ test("does not return partial ASTs for bad syntax", () => {
   }
 });
 
-test("reports unsupported relations explicitly", () => {
-  assert.throws(() => parse("x >= 2"), /only equations using '='/);
+test("constructs relation nodes for every comparison operator", () => {
+  assert.deepEqual(
+    ["!=", "<", "<=", ">", ">="].map((operator) => parse(`x ${operator} 2`).operator),
+    ["!=", "<", "<=", ">", ">="],
+  );
 });

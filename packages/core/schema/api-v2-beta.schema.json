@@ -19,10 +19,12 @@
             "format",
             "latex",
             "capabilities",
-            "analyzePolynomial"
+            "analyzePolynomial",
+            "solveRelation"
           ]
         },
         "expression": { "type": "string" },
+        "relation": { "type": "string" },
         "expressions": { "type": "array", "items": { "type": "string" } },
         "variable": { "type": "string" },
         "variables": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },

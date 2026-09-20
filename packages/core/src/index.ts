@@ -47,3 +47,5 @@ export * from "./evidence/derivation";
 export * from "./runtime/budget";
 export * from "./values/algebraic";
 export * from "./numeric/polynomialRoots";
+export * from "./sets/SolutionSet";
+export * from "./solve/relationSolver";

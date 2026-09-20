@@ -80,11 +80,12 @@ export function simplifyExpression(
 }
 
 export function simplify(tree: SyntaxTree, options: SimplifyOptions = {}): SimplifyResult {
-  if (tree.kind !== "equation") return simplifyExpression(tree, options);
+  if (tree.kind !== "equation" && tree.kind !== "relation")
+    return simplifyExpression(tree, options);
   const left = simplifyExpression(tree.left, options);
   const right = simplifyExpression(tree.right, options);
   return {
-    expression: { kind: "equation", left: left.expression, right: right.expression },
+    expression: { ...tree, left: left.expression, right: right.expression },
     steps: [...left.steps, ...right.steps],
   };
 }

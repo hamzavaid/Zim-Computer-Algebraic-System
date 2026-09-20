@@ -104,8 +104,7 @@ Exit code `0` means success, `2` means invalid CLI/input syntax, and `3` means t
 - Multiplication `*`, division `/`, modulo `%` or `mod`
 - Addition and subtraction
 - Parentheses, function calls, commas, and absolute-value bars
-- Equations using `=`
-- Other relation symbols are lexed for diagnostics but deliberately rejected by the parser for now
+- Equations using `=` and first-class relations using `!=`, `<`, `<=`, `>`, and `>=` (Unicode forms are normalized)
 
 Implicit multiplication such as `2x` is not supported. Use `2 * x`.
 
@@ -124,6 +123,8 @@ simplify(parse("x/x + x^0"), { nonZeroVariables: ["x"] });
 - Certified square-free decomposition, multiplicities, exact Sturm real-root isolation, up to 200 significant digits of certified real refinement, and complete complex approximations with residual diagnostics
 - Rational equations with polynomial variable denominators and exclusion filtering
 - Exponential, natural-logarithmic, standard inverse-pattern trigonometric, radical, and Lambert W forms
+- Typed finite, interval, union, empty, universal, conditional, and integer-parameter solution sets
+- Polynomial and rational inequalities, absolute-value equations/inequalities, guarded piecewise branches, and bounded/periodic trigonometric cases
 - Simultaneous linear systems with exact Gaussian elimination, including unique, infinite, and inconsistent classifications
 
 General irreducible cubic/quartic radical formulas, nonlinear systems, arbitrary transcendental rearrangement, and interval-valued solution sets remain explicit unsupported boundaries. Irreducible polynomials are available through algebraic intervals and numerical approximations rather than potentially explosive radical forms.

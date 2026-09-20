@@ -1,0 +1,17 @@
+[
+  {
+    "id": "polynomial-open-interval",
+    "relation": "x^2 - 1 < 0",
+    "family": "polynomial-inequality"
+  },
+  {
+    "id": "rational-sign-chart",
+    "relation": "(x - 1) / (x + 2) >= 0",
+    "family": "rational-inequality"
+  },
+  { "id": "absolute-equality", "relation": "abs(x - 2) = 3", "family": "absolute-value" },
+  { "id": "absolute-inequality", "relation": "abs(x) > 2", "family": "absolute-value" },
+  { "id": "periodic-trig", "relation": "sin(x) = 0", "family": "trigonometric" },
+  { "id": "bounded-trig-empty", "relation": "sin(x) = 2", "family": "trigonometric" },
+  { "id": "radical-rejection", "relation": "sqrt(x + 1) = x - 1", "family": "radical" }
+]
