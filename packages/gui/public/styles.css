@@ -223,6 +223,11 @@ button:hover {
   filter: brightness(1.1);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 button.secondary {
   color: var(--text);
   background: var(--accent-soft);
@@ -371,5 +376,17 @@ summary {
   *::before,
   *::after {
     scroll-behavior: auto !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .card,
+  .math-result,
+  .error {
+    border: 2px solid CanvasText;
+  }
+
+  button {
+    forced-color-adjust: auto;
   }
 }

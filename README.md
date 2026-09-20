@@ -12,6 +12,8 @@ The former JavaScript implementation is preserved under `legacy/` for comparison
 ```sh
 npm install
 npm run check
+npm run test:browsers
+npm run benchmark
 ```
 
 `npm run check` builds both packages, runs all tests, lints the TypeScript source, and checks formatting. Generated `dist` folders are not committed.
@@ -27,7 +29,16 @@ Then open `http://127.0.0.1:3210`. The interface communicates exclusively throug
 ## Current API
 
 ```js
-const { parse, simplify, solve, solveSystem, format, toLatex, execute } = require("@zim/core");
+const {
+  parse,
+  simplify,
+  solve,
+  solveSystem,
+  format,
+  toLatex,
+  execute,
+  executeV2,
+} = require("@zim/core");
 
 const ast = parse("1/3 + 1/6 + x * 0");
 const result = simplify(ast, { debug: true });
@@ -52,9 +63,12 @@ const response = execute({
   variable: "x",
 });
 console.log(JSON.stringify(response));
+
+const capabilities = executeV2({ apiVersion: "2.0-beta", operation: "capabilities" });
+console.log(capabilities.requestId, capabilities.result);
 ```
 
-The public package also exports `toLatex()`. API v1 converts all `bigint` fields to decimal strings, so responses are safe to send through JSON. Its machine-readable schema is shipped at `packages/core/schema/api-v1.schema.json`.
+The public package also exports `toLatex()`. API v1 remains compatible and converts all `bigint` fields to decimal strings. The operation-specific v2 beta envelope adds request IDs, timing, diagnostics, and resource-budget outcomes. Machine-readable schemas ship with the core package.
 
 Solve requests can set `includeSteps: true` to receive backend-generated verified-solution steps. Simplification requests return their applied rewrite rules through the same option.
 

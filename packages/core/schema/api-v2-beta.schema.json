@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zim-cas.dev/schema/api-v2-beta.schema.json",
+  "title": "Zim Core API v2 Beta",
+  "oneOf": [{ "$ref": "#/$defs/request" }, { "$ref": "#/$defs/response" }],
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": ["apiVersion", "operation"],
+      "properties": {
+        "apiVersion": { "const": "2.0-beta" },
+        "requestId": { "type": "string" },
+        "operation": {
+          "enum": ["parse", "simplify", "solve", "solveSystem", "format", "latex", "capabilities"]
+        },
+        "expression": { "type": "string" },
+        "expressions": { "type": "array", "items": { "type": "string" } },
+        "variable": { "type": "string" },
+        "variables": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "domain": { "enum": ["real", "complex"] },
+        "includeSteps": { "type": "boolean" },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maxInputLength": { "type": "integer", "minimum": 1 },
+            "maxAstNodes": { "type": "integer", "minimum": 1 },
+            "maxNestingDepth": { "type": "integer", "minimum": 1 },
+            "maxOperations": { "type": "integer", "minimum": 1 },
+            "maxMilliseconds": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      }
+    },
+    "response": {
+      "type": "object",
+      "required": ["apiVersion", "requestId", "status", "diagnostics", "timing"],
+      "properties": {
+        "apiVersion": { "const": "2.0-beta" },
+        "requestId": { "type": "string" },
+        "status": {
+          "enum": ["ok", "unsupported", "invalid", "budget-exceeded", "internal-error"]
+        },
+        "result": {},
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          }
+        },
+        "diagnostics": {
+          "type": "object",
+          "required": ["operation"],
+          "properties": {
+            "operation": { "type": "string" },
+            "code": { "type": "string" }
+          }
+        },
+        "timing": {
+          "type": "object",
+          "required": ["totalMs"],
+          "properties": { "totalMs": { "type": "number", "minimum": 0 } }
+        }
+      }
+    }
+  }
+}

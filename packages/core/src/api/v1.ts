@@ -11,10 +11,12 @@ import { ZimError } from "../errors/ZimError";
 import { formatSolveResult, latexSolveResult, solveWithSteps } from "./public";
 import { solveSystem } from "../solve/systemSolver";
 import { formatSystemSolveResult } from "./public";
+import { capabilities } from "./capabilities";
 
 export const API_VERSION = "1.0" as const;
 
-export type ApiOperation = "parse" | "simplify" | "solve" | "solve-system" | "format" | "latex";
+export type ApiOperation =
+  "parse" | "simplify" | "solve" | "solve-system" | "format" | "latex" | "capabilities";
 
 export interface ApiRequest {
   readonly version: typeof API_VERSION;
@@ -56,6 +58,9 @@ function error(code: string, message: string, start?: number, end?: number): Api
 export function execute(request: ApiRequest): ApiResponse {
   if (!request || request.version !== API_VERSION) {
     return error("API_VERSION_UNSUPPORTED", `Expected API version '${API_VERSION}'`);
+  }
+  if (request.operation === "capabilities") {
+    return { version: API_VERSION, status: "ok", result: capabilities() };
   }
   if (request.operation === "solve-system") {
     if (!Array.isArray(request.expressions) || request.expressions.length === 0) {

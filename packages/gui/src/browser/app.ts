@@ -36,10 +36,14 @@ const treeOutput = byId<HTMLElement>("tree-output");
 const historyOutput = byId<HTMLUListElement>("history-output");
 const statusOutput = byId<HTMLElement>("status-output");
 const themeButton = byId<HTMLButtonElement>("theme-toggle");
+const cancelButton = byId<HTMLButtonElement>("cancel-button");
+const clearHistoryButton = byId<HTMLButtonElement>("clear-history-button");
 
 let lastPayload: ApiPayload | undefined;
 let lastText = "";
 let lastLatex = "";
+let activeRequest: AbortController | undefined;
+let requestSequence = 0;
 
 const mathNamespace = "http://www.w3.org/1998/Math/MathML";
 
@@ -155,17 +159,39 @@ function renderMathematics(result: Record<string, unknown>): void {
   mathOutput.replaceChildren(math);
 }
 
-function readHistory(): string[] {
+interface StoredHistory {
+  readonly version: 1;
+  readonly entries: readonly { readonly expression: string; readonly createdAt?: string }[];
+}
+
+function emptyHistory(): StoredHistory {
+  return { version: 1, entries: [] };
+}
+
+function readHistory(): StoredHistory {
   try {
-    return JSON.parse(localStorage.getItem("zim-history") ?? "[]") as string[];
+    const value = JSON.parse(localStorage.getItem("zim-history") ?? "null") as unknown;
+    if (Array.isArray(value)) {
+      return {
+        version: 1,
+        entries: value
+          .filter((entry): entry is string => typeof entry === "string")
+          .map((expression) => ({ expression })),
+      };
+    }
+    if (value && typeof value === "object") {
+      const state = value as StoredHistory;
+      if (state.version === 1 && Array.isArray(state.entries)) return state;
+    }
+    return emptyHistory();
   } catch {
-    return [];
+    return emptyHistory();
   }
 }
 
 function renderHistory(): void {
   historyOutput.replaceChildren();
-  for (const expression of readHistory()) {
+  for (const { expression } of readHistory().entries) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = expression;
@@ -180,7 +206,13 @@ function renderHistory(): void {
 }
 
 function remember(expression: string): void {
-  const history = [expression, ...readHistory().filter((item) => item !== expression)].slice(0, 20);
+  const history: StoredHistory = {
+    version: 1,
+    entries: [
+      { expression, createdAt: new Date().toISOString() },
+      ...readHistory().entries.filter((item) => item.expression !== expression),
+    ].slice(0, 20),
+  };
   try {
     localStorage.setItem("zim-history", JSON.stringify(history));
   } catch {
@@ -280,6 +312,11 @@ async function run(operation: Operation): Promise<void> {
     });
     return;
   }
+  activeRequest?.abort();
+  const controller = new AbortController();
+  activeRequest = controller;
+  const sequence = ++requestSequence;
+  cancelButton.disabled = false;
   statusOutput.textContent = "Working…";
   const request = {
     version: "1.0",
@@ -294,21 +331,32 @@ async function run(operation: Operation): Promise<void> {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(request),
+      signal: controller.signal,
     });
+    if (sequence !== requestSequence) return;
     lastPayload = (await response.json()) as ApiPayload;
     if (lastPayload.status === "error") showError(lastPayload);
     else {
       showSuccess(lastPayload);
       remember(expression);
     }
-  } catch {
+  } catch (caught) {
+    if (sequence !== requestSequence) return;
+    if (caught instanceof DOMException && caught.name === "AbortError") {
+      statusOutput.textContent = "Cancelled";
+      return;
+    }
     showError({
       version: "1.0",
       status: "error",
       error: { code: "CONNECTION_ERROR", message: "The local Zim backend is unavailable" },
     });
   } finally {
-    statusOutput.textContent = "Ready";
+    if (sequence === requestSequence) {
+      activeRequest = undefined;
+      cancelButton.disabled = true;
+      if (statusOutput.textContent !== "Cancelled") statusOutput.textContent = "Ready";
+    }
   }
 }
 
@@ -334,6 +382,17 @@ byId<HTMLButtonElement>("clear-button").addEventListener("click", () => {
   lastText = "";
   lastLatex = "";
   expressionInput.focus();
+});
+
+cancelButton.addEventListener("click", () => activeRequest?.abort());
+
+clearHistoryButton.addEventListener("click", () => {
+  try {
+    localStorage.setItem("zim-history", JSON.stringify(emptyHistory()));
+  } catch {
+    // Storage is optional.
+  }
+  renderHistory();
 });
 
 document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {

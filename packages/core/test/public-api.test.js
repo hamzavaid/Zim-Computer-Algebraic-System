@@ -13,6 +13,8 @@ test("public entrypoint exposes the stable backend operations", () => {
     "format",
     "toLatex",
     "execute",
+    "executeV2",
+    "capabilities",
   ]) {
     assert.equal(typeof core[name], "function", name);
   }
@@ -144,5 +146,10 @@ test("shipped v1 JSON Schema agrees with the runtime contract", () => {
     "solve-system",
     "format",
     "latex",
+    "capabilities",
   ]);
+  const v2Schema = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, "../schema/api-v2-beta.schema.json"), "utf8"),
+  );
+  assert.equal(v2Schema.$defs.request.properties.apiVersion.const, core.API_VERSION_V2);
 });

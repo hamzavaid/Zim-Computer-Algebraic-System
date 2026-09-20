@@ -1,0 +1,29 @@
+[
+  { "id": "2.0-capabilities-v1", "area": "api", "operation": "capabilities" },
+  { "id": "2.0-v2-envelope", "area": "api", "operation": "parse", "expression": "x + 1" },
+  { "id": "2.0-v1-compatibility", "area": "api", "operation": "solve", "expression": "x^2 = 4" },
+  { "id": "2.0-assumption-domain", "area": "assumptions", "symbol": "x", "domain": "real" },
+  {
+    "id": "2.0-assumption-conflict",
+    "area": "assumptions",
+    "symbol": "x",
+    "predicates": ["positive", "negative"]
+  },
+  {
+    "id": "2.0-radical-reduction",
+    "area": "canonical",
+    "expression": "sqrt(12)",
+    "expected": "2 * sqrt(3)"
+  },
+  {
+    "id": "2.0-complex-verification",
+    "area": "verification",
+    "expression": "x^2 + 1",
+    "value": "i"
+  },
+  { "id": "2.0-derivation-acyclic", "area": "evidence", "maxNodes": 16 },
+  { "id": "2.0-budget-node-limit", "area": "budget", "limit": 4 },
+  { "id": "2.0-cancelled-request", "area": "runtime", "expected": "REQUEST_CANCELLED" },
+  { "id": "2.0-malformed-json", "area": "fuzz", "expected": "INVALID_JSON" },
+  { "id": "2.0-package-isolation", "area": "packaging", "privateArtifacts": false }
+]

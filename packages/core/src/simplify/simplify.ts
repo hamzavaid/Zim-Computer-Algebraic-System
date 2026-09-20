@@ -7,6 +7,7 @@ import { safeCancellationRule } from "./cancellationRules";
 import { identityRule } from "./identityRules";
 import { likeTermRule } from "./likeTermRules";
 import { powerRule } from "./powerRules";
+import { radicalReductionRule } from "./radicalRules";
 import { RewriteRule, SimplifyContext } from "./RewriteRule";
 import { signRule } from "./signRules";
 
@@ -32,6 +33,7 @@ export const defaultRules: readonly RewriteRule[] = [
   identityRule,
   signRule,
   powerRule,
+  radicalReductionRule,
   safeCancellationRule,
   likeTermRule,
 ];

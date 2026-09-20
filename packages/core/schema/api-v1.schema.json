@@ -11,7 +11,7 @@
       "properties": {
         "version": { "const": "1.0" },
         "operation": {
-          "enum": ["parse", "simplify", "solve", "solve-system", "format", "latex"]
+          "enum": ["parse", "simplify", "solve", "solve-system", "format", "latex", "capabilities"]
         },
         "expression": { "type": "string", "minLength": 1 },
         "expressions": {
