@@ -49,3 +49,4 @@ export * from "./values/algebraic";
 export * from "./numeric/polynomialRoots";
 export * from "./sets/SolutionSet";
 export * from "./solve/relationSolver";
+export * from "./solve/nonlinearSystemSolver";

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "circle-line",
+    "equations": ["x^2 + y^2 = 5", "x - y = 1"],
+    "variables": ["x", "y"],
+    "solutions": 2
+  },
+  {
+    "id": "product-sum",
+    "equations": ["x * y = 2", "x + y = 3"],
+    "variables": ["x", "y"],
+    "solutions": 2
+  },
+  {
+    "id": "resultant-squares",
+    "equations": ["x^2 + y^2 = 5", "x^2 - y^2 = 3"],
+    "variables": ["x", "y"],
+    "solutions": 4
+  },
+  {
+    "id": "positive-dimensional",
+    "equations": ["x^2 + y^2 = 1"],
+    "variables": ["x", "y"],
+    "dimension": 1
+  },
+  {
+    "id": "inconsistent",
+    "equations": ["x^2 + y^2 = 0", "x = 1"],
+    "variables": ["x", "y"],
+    "solutions": 0
+  },
+  {
+    "id": "numeric-newton",
+    "equations": ["x^2 + y^2 = 1", "x - y = 0"],
+    "variables": ["x", "y"],
+    "solutions": 1
+  }
+]

@@ -7,6 +7,7 @@ import { polynomialToExpression } from "../algebra/polynomial";
 import { serializeExpression, serializeSyntaxTree } from "../serialization/serialize";
 import { solveRelation } from "../solve/relationSolver";
 import { serializeSolutionSet } from "../sets/SolutionSet";
+import { solveNonlinearSystem } from "../solve/nonlinearSystemSolver";
 
 export const API_VERSION_V2 = "2.0-beta" as const;
 
@@ -45,6 +46,16 @@ export type ApiV2Request =
       readonly variable: string;
     })
   | (BaseRequest & {
+      readonly operation: "solveNonlinearSystem";
+      readonly equations: readonly string[];
+      readonly variables: readonly string[];
+      readonly mode?: "exact" | "numeric";
+      readonly initialGuess?: Readonly<Record<string, number>>;
+      readonly maxIterations?: number;
+      readonly tolerance?: number;
+      readonly maxResultantDegree?: number;
+    })
+  | (BaseRequest & {
       readonly operation: "solveSystem";
       readonly expressions: readonly string[];
       readonly variables: readonly string[];
@@ -75,7 +86,8 @@ function v1Request(request: ApiV2Request): ApiRequest | undefined {
   if (
     request.operation === "capabilities" ||
     request.operation === "analyzePolynomial" ||
-    request.operation === "solveRelation"
+    request.operation === "solveRelation" ||
+    request.operation === "solveNonlinearSystem"
   )
     return undefined;
   if (request.operation === "solveSystem") {
@@ -178,6 +190,54 @@ export function executeV2(request: ApiV2Request): ApiV2Response {
             candidate: serializeExpression(entry.candidate),
           })),
         },
+        diagnostics: { operation: request.operation },
+      });
+    }
+    if (request.operation === "solveNonlinearSystem") {
+      const trees = request.equations.map(parse);
+      if (trees.some((tree) => tree.kind !== "equation")) {
+        return finish({
+          status: "invalid",
+          error: { code: "EQUATIONS_REQUIRED", message: "Every system member must be an equation" },
+          diagnostics: { operation: request.operation, code: "EQUATIONS_REQUIRED" },
+        });
+      }
+      const solved = solveNonlinearSystem(
+        trees.filter((tree) => tree.kind === "equation"),
+        request.variables,
+        {
+          mode: request.mode,
+          initialGuess: request.initialGuess,
+          maxIterations: request.maxIterations,
+          tolerance: request.tolerance,
+          maxResultantDegree: request.maxResultantDegree,
+        },
+      );
+      const result =
+        solved.kind === "finite"
+          ? {
+              ...solved,
+              solutions: solved.solutions.map((solution) => ({
+                ...solution,
+                values: Object.fromEntries(
+                  Object.entries(solution.values).map(([name, value]) => [
+                    name,
+                    serializeExpression(value),
+                  ]),
+                ),
+              })),
+            }
+          : solved.kind === "positive-dimensional"
+            ? { ...solved, constraints: solved.constraints.map(serializeSyntaxTree) }
+            : solved;
+      return finish({
+        status:
+          solved.kind === "unsupported"
+            ? "unsupported"
+            : solved.kind === "incomplete"
+              ? "budget-exceeded"
+              : "ok",
+        result,
         diagnostics: { operation: request.operation },
       });
     }

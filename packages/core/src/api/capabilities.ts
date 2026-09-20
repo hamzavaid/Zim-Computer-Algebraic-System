@@ -7,7 +7,7 @@ export interface CapabilityLimits {
 }
 
 export interface CapabilityRegistry {
-  readonly release: "2.2.0";
+  readonly release: "2.3.0";
   readonly apiVersions: readonly ["1.0", "2.0-beta"];
   readonly operations: readonly string[];
   readonly solverFamilies: readonly string[];
@@ -17,7 +17,7 @@ export interface CapabilityRegistry {
 }
 
 const registry: CapabilityRegistry = Object.freeze({
-  release: "2.2.0",
+  release: "2.3.0",
   apiVersions: ["1.0", "2.0-beta"] as const,
   operations: [
     "parse",
@@ -29,6 +29,7 @@ const registry: CapabilityRegistry = Object.freeze({
     "capabilities",
     "analyzePolynomial",
     "solveRelation",
+    "solveNonlinearSystem",
   ],
   solverFamilies: [
     "linear",
@@ -40,6 +41,7 @@ const registry: CapabilityRegistry = Object.freeze({
     "inequality",
     "absolute-value",
     "piecewise",
+    "nonlinear-system",
   ],
   domains: ["real", "complex", "integer", "natural"] as const,
   limits: {

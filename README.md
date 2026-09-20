@@ -74,6 +74,14 @@ const roots = executeV2({
   variable: "x",
 });
 console.log(roots.result.complexRoots); // approximations include residuals and multiplicities
+
+const nonlinear = executeV2({
+  apiVersion: "2.0-beta",
+  operation: "solveNonlinearSystem",
+  equations: ["x * y = 2", "x + y = 3"],
+  variables: ["x", "y"],
+});
+console.log(nonlinear.result.solutions);
 ```
 
 The public package also exports `toLatex()`. API v1 remains compatible and converts all `bigint` fields to decimal strings. The operation-specific v2 beta envelope adds request IDs, timing, diagnostics, and resource-budget outcomes. Machine-readable schemas ship with the core package.
@@ -126,8 +134,9 @@ simplify(parse("x/x + x^0"), { nonZeroVariables: ["x"] });
 - Typed finite, interval, union, empty, universal, conditional, and integer-parameter solution sets
 - Polynomial and rational inequalities, absolute-value equations/inequalities, guarded piecewise branches, and bounded/periodic trigonometric cases
 - Simultaneous linear systems with exact Gaussian elimination, including unique, infinite, and inconsistent classifications
+- Bounded two-variable nonlinear systems using exact substitution, square-resultant elimination, or opt-in Newton iteration with Jacobian and residual diagnostics
 
-General irreducible cubic/quartic radical formulas, nonlinear systems, arbitrary transcendental rearrangement, and interval-valued solution sets remain explicit unsupported boundaries. Irreducible polynomials are available through algebraic intervals and numerical approximations rather than potentially explosive radical forms.
+General irreducible cubic/quartic radical formulas, arbitrary nonlinear elimination, and arbitrary transcendental rearrangement remain explicit unsupported boundaries. Irreducible polynomials are available through algebraic intervals and numerical approximations rather than potentially explosive radical forms. Nonlinear systems outside the bounded two-variable strategies return explicit unsupported or incomplete results.
 
 ## Repository map
 
