@@ -82,11 +82,20 @@ const nonlinear = executeV2({
   variables: ["x", "y"],
 });
 console.log(nonlinear.result.solutions);
+
+const proof = executeV2({
+  apiVersion: "2.0-beta",
+  operation: "derive",
+  expression: "sqrt(x + 1) = x - 1",
+  variable: "x",
+  renderMode: "classroom",
+});
+console.log(proof.result.rendered.text);
 ```
 
 The public package also exports `toLatex()`. API v1 remains compatible and converts all `bigint` fields to decimal strings. The operation-specific v2 beta envelope adds request IDs, timing, diagnostics, and resource-budget outcomes. Machine-readable schemas ship with the core package.
 
-Solve requests can set `includeSteps: true` to receive backend-generated verified-solution steps. Simplification requests return their applied rewrite rules through the same option.
+Solve requests can set `includeSteps: true` to receive a canonical nested derivation graph plus the compatible flat-step view. Stable rule IDs, localized metadata, accepted/rejected evidence, node budgets, and concise/classroom/diagnostic renderers are also available through the v2 `derive` operation. Simplification requests return their applied rewrite rules through the same option.
 
 ## CLI
 

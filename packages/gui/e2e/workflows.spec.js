@@ -8,6 +8,8 @@ test("keyboard workflow solves and exposes the result accessibly", async ({ page
   await expect(page.getByText("x = -2, 2", { exact: true })).toBeAttached();
   await expect(page.locator("#status-output")).toHaveText("Ready");
   await expect(page.locator("#steps-output li").first()).toBeVisible();
+  await expect(page.locator("#steps-output details")).toHaveCount(7);
+  await expect(page.locator("#steps-output summary").first()).toContainText("solve.result");
 });
 
 test("history migrates, can be recalled, and can be deleted", async ({ page }) => {

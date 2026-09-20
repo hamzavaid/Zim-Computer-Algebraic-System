@@ -277,6 +277,58 @@ function renderSteps(steps: unknown): void {
   }
 }
 
+function renderDerivationGraph(value: unknown): void {
+  stepsOutput.replaceChildren();
+  if (!value || typeof value !== "object") {
+    renderSteps([]);
+    return;
+  }
+  const graph = value as { roots?: unknown; nodes?: unknown };
+  if (!Array.isArray(graph.roots) || !Array.isArray(graph.nodes)) {
+    renderSteps([]);
+    return;
+  }
+  const nodes = new Map(
+    graph.nodes
+      .filter((node): node is Record<string, unknown> => Boolean(node) && typeof node === "object")
+      .map((node) => [String(node.id), node]),
+  );
+  const rendered = new Set<string>();
+  const renderNode = (id: string, active: ReadonlySet<string>): HTMLLIElement => {
+    const item = document.createElement("li");
+    if (rendered.has(id)) {
+      item.textContent = `See derivation step ${id}`;
+      return item;
+    }
+    const node = nodes.get(id);
+    if (!node) {
+      item.textContent = `Missing derivation node ${id}`;
+      return item;
+    }
+    rendered.add(id);
+    const details = document.createElement("details");
+    details.open = active.size === 0;
+    const summary = document.createElement("summary");
+    summary.textContent = String(node.ruleId ?? "derivation step");
+    details.append(summary);
+    const evidence = document.createElement("pre");
+    evidence.textContent = JSON.stringify(node.evidence ?? {}, null, 2);
+    details.append(evidence);
+    const nextActive = new Set(active).add(id);
+    const childIds = Array.isArray(node.children) ? node.children.map(String) : [];
+    if (childIds.length > 0) {
+      const children = document.createElement("ol");
+      for (const child of childIds) {
+        if (!nextActive.has(child)) children.append(renderNode(child, nextActive));
+      }
+      details.append(children);
+    }
+    item.append(details);
+    return item;
+  };
+  for (const root of graph.roots.map(String)) stepsOutput.append(renderNode(root, new Set()));
+}
+
 function showError(payload: ApiErrorPayload): void {
   const position =
     payload.error.start === undefined
@@ -299,7 +351,8 @@ function showSuccess(payload: ApiSuccessPayload): void {
   renderMathematics(result);
   latexOutput.textContent = lastLatex || "No LaTeX output for this operation.";
   errorOutput.hidden = true;
-  renderSteps(result.steps);
+  if (result.derivation) renderDerivationGraph(result.derivation);
+  else renderSteps(result.steps);
   renderTree(result.ast ?? result.solution ?? result);
 }
 

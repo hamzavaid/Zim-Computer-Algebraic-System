@@ -21,7 +21,8 @@
             "capabilities",
             "analyzePolynomial",
             "solveRelation",
-            "solveNonlinearSystem"
+            "solveNonlinearSystem",
+            "derive"
           ]
         },
         "expression": { "type": "string" },
@@ -40,7 +41,8 @@
             "maxAstNodes": { "type": "integer", "minimum": 1 },
             "maxNestingDepth": { "type": "integer", "minimum": 1 },
             "maxOperations": { "type": "integer", "minimum": 1 },
-            "maxMilliseconds": { "type": "number", "exclusiveMinimum": 0 }
+            "maxMilliseconds": { "type": "number", "exclusiveMinimum": 0 },
+            "maxDerivationNodes": { "type": "integer", "minimum": 1 }
           }
         }
       }

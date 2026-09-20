@@ -1,0 +1,11 @@
+[
+  { "id": "linear-proof", "input": "2 * x + 1 = 5", "variable": "x", "accepted": 1, "rejected": 0 },
+  { "id": "quadratic-proof", "input": "x^2 = 4", "variable": "x", "accepted": 2, "rejected": 0 },
+  {
+    "id": "radical-proof",
+    "input": "sqrt(x + 1) = x - 1",
+    "variable": "x",
+    "accepted": 1,
+    "rejected": 1
+  }
+]

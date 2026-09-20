@@ -5,6 +5,7 @@ import { solveFor } from "../solve/solveFor";
 import { SolveResult } from "../solve/SolveResult";
 import { SolveDomain } from "../solve/SolveOptions";
 import { SystemSolveResult } from "../solve/systemSolver";
+import { buildSolveDerivation, DerivationGraph } from "../evidence/derivation";
 
 export interface SolveOptions {
   readonly variable: string;
@@ -24,11 +25,13 @@ export interface SolveTraceStep {
 export interface DetailedSolveResult {
   readonly result: SolveResult;
   readonly steps: readonly SolveTraceStep[];
+  readonly derivation: DerivationGraph;
 }
 
 export function solveWithSteps(tree: SyntaxTree, options: SolveOptions): DetailedSolveResult {
   const result = solve(tree, options);
-  if (tree.kind !== "equation") return { result, steps: [] };
+  const derivation = buildSolveDerivation(tree, { variable: options.variable });
+  if (tree.kind !== "equation") return { result, steps: [], derivation };
   const values =
     result.kind === "solution"
       ? [result.value]
@@ -42,6 +45,7 @@ export function solveWithSteps(tree: SyntaxTree, options: SolveOptions): Detaile
       before: tree,
       after: equation(variable(options.variable), value),
     })),
+    derivation,
   };
 }
 

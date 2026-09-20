@@ -151,6 +151,7 @@ export function execute(request: ApiRequest): ApiResponse {
                 after: serializeSyntaxTree(step.after),
               }))
             : [],
+          ...(request.includeSteps ? { derivation: detailed.derivation } : {}),
         },
       };
     }

@@ -8,6 +8,7 @@ import { serializeExpression, serializeSyntaxTree } from "../serialization/seria
 import { solveRelation } from "../solve/relationSolver";
 import { serializeSolutionSet } from "../sets/SolutionSet";
 import { solveNonlinearSystem } from "../solve/nonlinearSystemSolver";
+import { buildSolveDerivation, renderDerivation } from "../evidence/derivation";
 
 export const API_VERSION_V2 = "2.0-beta" as const;
 
@@ -56,6 +57,13 @@ export type ApiV2Request =
       readonly maxResultantDegree?: number;
     })
   | (BaseRequest & {
+      readonly operation: "derive";
+      readonly expression: string;
+      readonly variable: string;
+      readonly renderMode?: "concise" | "classroom" | "diagnostic";
+      readonly locale?: string;
+    })
+  | (BaseRequest & {
       readonly operation: "solveSystem";
       readonly expressions: readonly string[];
       readonly variables: readonly string[];
@@ -87,7 +95,8 @@ function v1Request(request: ApiV2Request): ApiRequest | undefined {
     request.operation === "capabilities" ||
     request.operation === "analyzePolynomial" ||
     request.operation === "solveRelation" ||
-    request.operation === "solveNonlinearSystem"
+    request.operation === "solveNonlinearSystem" ||
+    request.operation === "derive"
   )
     return undefined;
   if (request.operation === "solveSystem") {
@@ -238,6 +247,23 @@ export function executeV2(request: ApiV2Request): ApiV2Response {
               ? "budget-exceeded"
               : "ok",
         result,
+        diagnostics: { operation: request.operation },
+      });
+    }
+    if (request.operation === "derive") {
+      const graph = buildSolveDerivation(parse(request.expression), {
+        variable: request.variable,
+        maxNodes: request.budget?.maxDerivationNodes,
+      });
+      return finish({
+        status: "ok",
+        result: {
+          graph,
+          rendered: renderDerivation(graph, {
+            mode: request.renderMode ?? "classroom",
+            locale: request.locale,
+          }),
+        },
         diagnostics: { operation: request.operation },
       });
     }

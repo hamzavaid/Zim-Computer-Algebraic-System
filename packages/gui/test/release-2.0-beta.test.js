@@ -25,3 +25,14 @@ test("history schema migrates legacy arrays and supports deletion", () => {
   );
   assert.deepEqual(require("../dist/state/history").clearHistory(), { version: 1, entries: [] });
 });
+
+test("browser renders derivation graphs as nested accessible disclosure controls", () => {
+  const source = require("node:fs").readFileSync(
+    require("node:path").resolve(__dirname, "../src/browser/app.ts"),
+    "utf8",
+  );
+  assert.match(source, /renderDerivationGraph/);
+  assert.match(source, /document\.createElement\("details"\)/);
+  assert.match(source, /document\.createElement\("summary"\)/);
+  assert.doesNotMatch(source, /innerHTML/);
+});
