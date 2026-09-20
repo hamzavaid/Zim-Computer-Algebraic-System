@@ -66,6 +66,14 @@ console.log(JSON.stringify(response));
 
 const capabilities = executeV2({ apiVersion: "2.0-beta", operation: "capabilities" });
 console.log(capabilities.requestId, capabilities.result);
+
+const roots = executeV2({
+  apiVersion: "2.0-beta",
+  operation: "analyzePolynomial",
+  expression: "x^5 + x + 1",
+  variable: "x",
+});
+console.log(roots.result.complexRoots); // approximations include residuals and multiplicities
 ```
 
 The public package also exports `toLatex()`. API v1 remains compatible and converts all `bigint` fields to decimal strings. The operation-specific v2 beta envelope adds request IDs, timing, diagnostics, and resource-budget outcomes. Machine-readable schemas ship with the core package.
@@ -113,11 +121,12 @@ simplify(parse("x/x + x^0"), { nonZeroVariables: ["x"] });
 
 - Linear and quadratic equations over the real domain, plus complex quadratic roots when `domain: "complex"` is selected
 - Higher-degree polynomials with exact rational factors, binomial forms, and reducible power-composition forms
+- Certified square-free decomposition, multiplicities, exact Sturm real-root isolation, up to 200 significant digits of certified real refinement, and complete complex approximations with residual diagnostics
 - Rational equations with polynomial variable denominators and exclusion filtering
 - Exponential, natural-logarithmic, standard inverse-pattern trigonometric, radical, and Lambert W forms
 - Simultaneous linear systems with exact Gaussian elimination, including unique, infinite, and inconsistent classifications
 
-General irreducible cubic/quartic formulas, numerical root approximation, nonlinear systems, arbitrary transcendental rearrangement, and interval-valued solution sets remain explicit unsupported boundaries.
+General irreducible cubic/quartic radical formulas, nonlinear systems, arbitrary transcendental rearrangement, and interval-valued solution sets remain explicit unsupported boundaries. Irreducible polynomials are available through algebraic intervals and numerical approximations rather than potentially explosive radical forms.
 
 ## Repository map
 

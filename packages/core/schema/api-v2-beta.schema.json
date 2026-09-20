@@ -11,7 +11,16 @@
         "apiVersion": { "const": "2.0-beta" },
         "requestId": { "type": "string" },
         "operation": {
-          "enum": ["parse", "simplify", "solve", "solveSystem", "format", "latex", "capabilities"]
+          "enum": [
+            "parse",
+            "simplify",
+            "solve",
+            "solveSystem",
+            "format",
+            "latex",
+            "capabilities",
+            "analyzePolynomial"
+          ]
         },
         "expression": { "type": "string" },
         "expressions": { "type": "array", "items": { "type": "string" } },

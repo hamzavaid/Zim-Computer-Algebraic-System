@@ -1,0 +1,13 @@
+[
+  {
+    "id": "repeated-roots",
+    "expression": "(x - 1)^3 * (x + 2)^2",
+    "distinctRealRoots": 2,
+    "totalRoots": 5
+  },
+  { "id": "three-real-roots", "expression": "x^3 - x", "distinctRealRoots": 3, "totalRoots": 3 },
+  { "id": "irrational-pair", "expression": "x^2 - 2", "distinctRealRoots": 2, "totalRoots": 2 },
+  { "id": "one-real-cubic", "expression": "x^3 - 2", "distinctRealRoots": 1, "totalRoots": 3 },
+  { "id": "unity-roots", "expression": "x^3 - 1", "distinctRealRoots": 1, "totalRoots": 3 },
+  { "id": "quintic", "expression": "x^5 + x + 1", "distinctRealRoots": 1, "totalRoots": 5 }
+]

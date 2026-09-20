@@ -46,3 +46,4 @@ export * from "./assumptions/AssumptionSet";
 export * from "./evidence/derivation";
 export * from "./runtime/budget";
 export * from "./values/algebraic";
+export * from "./numeric/polynomialRoots";

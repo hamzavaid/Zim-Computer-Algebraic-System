@@ -1,6 +1,6 @@
 {
   "name": "@zim/cli",
-  "version": "2.0.0-beta.1",
+  "version": "2.1.0",
   "private": true,
   "files": [
     "dist"
@@ -9,6 +9,6 @@
     "zim": "dist/cli.js"
   },
   "dependencies": {
-    "@zim/core": "2.0.0-beta.1"
+    "@zim/core": "2.1.0"
   }
 }

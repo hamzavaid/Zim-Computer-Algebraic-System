@@ -1,6 +1,10 @@
 import { capabilities } from "./capabilities";
 import { execute, ApiRequest, ApiResponse } from "./v1";
 import { ResourceBudget, RuntimeGuardError } from "../runtime/budget";
+import { parse } from "../parser/Parser";
+import { analyzePolynomialRoots } from "../numeric/polynomialRoots";
+import { polynomialToExpression } from "../algebra/polynomial";
+import { serializeSyntaxTree } from "../serialization/serialize";
 
 export const API_VERSION_V2 = "2.0-beta" as const;
 
@@ -27,6 +31,11 @@ export type ApiV2Request =
       readonly variable: string;
       readonly domain?: "real" | "complex";
       readonly includeSteps?: boolean;
+    })
+  | (BaseRequest & {
+      readonly operation: "analyzePolynomial";
+      readonly expression: string;
+      readonly variable: string;
     })
   | (BaseRequest & {
       readonly operation: "solveSystem";
@@ -56,7 +65,8 @@ function requestId(request: ApiV2Request): string {
 }
 
 function v1Request(request: ApiV2Request): ApiRequest | undefined {
-  if (request.operation === "capabilities") return undefined;
+  if (request.operation === "capabilities" || request.operation === "analyzePolynomial")
+    return undefined;
   if (request.operation === "solveSystem") {
     return {
       version: "1.0",
@@ -107,6 +117,37 @@ export function executeV2(request: ApiV2Request): ApiV2Response {
       return finish({
         status: "ok",
         result: capabilities(),
+        diagnostics: { operation: request.operation },
+      });
+    }
+    if (request.operation === "analyzePolynomial") {
+      const tree = parse(request.expression);
+      const analysis =
+        tree.kind === "equation"
+          ? ({ kind: "unsupported", reason: "Polynomial analysis expects an expression" } as const)
+          : analyzePolynomialRoots(tree, request.variable);
+      const result =
+        analysis.kind !== "complete"
+          ? analysis
+          : {
+              ...analysis,
+              factors: analysis.factors.map((factor) => ({
+                polynomial: serializeSyntaxTree(polynomialToExpression(factor.polynomial)),
+                multiplicity: factor.multiplicity,
+              })),
+              complexRoots: analysis.complexRoots.map((root) => ({
+                ...root,
+                ...(root.exact === undefined ? {} : { exact: serializeSyntaxTree(root.exact) }),
+              })),
+            };
+      return finish({
+        status:
+          analysis.kind === "complete"
+            ? "ok"
+            : analysis.kind === "incomplete"
+              ? "budget-exceeded"
+              : "unsupported",
+        result,
         diagnostics: { operation: request.operation },
       });
     }
