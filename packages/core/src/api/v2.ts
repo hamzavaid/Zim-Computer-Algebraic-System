@@ -9,6 +9,7 @@ import { solveRelation } from "../solve/relationSolver";
 import { serializeSolutionSet } from "../sets/SolutionSet";
 import { solveNonlinearSystem } from "../solve/nonlinearSystemSolver";
 import { buildSolveDerivation, renderDerivation } from "../evidence/derivation";
+import { ZimError } from "../errors/ZimError";
 
 export const API_VERSION_V2 = "2.0-beta" as const;
 
@@ -280,6 +281,13 @@ export function executeV2(request: ApiV2Request): ApiV2Response {
           diagnostics: { operation: request.operation, code: legacy.error.code },
         });
   } catch (caught) {
+    if (caught instanceof ZimError) {
+      return finish({
+        status: "invalid",
+        error: { code: caught.code, message: caught.message },
+        diagnostics: { operation: request.operation, code: caught.code },
+      });
+    }
     if (caught instanceof RuntimeGuardError) {
       return finish({
         status: caught.code === "BUDGET_EXCEEDED" ? "budget-exceeded" : "invalid",
