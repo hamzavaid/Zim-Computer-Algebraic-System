@@ -133,7 +133,7 @@ function parseArguments(args: readonly string[]): ParsedArguments {
       if (!locale) throw new Error("--locale requires a locale");
     } else if (argument === "--max-derivation-nodes")
       maxDerivationNodes = positiveNumber(args[++index], argument, true);
-    else if (argument.startsWith("-")) throw new Error(`Unknown option '${argument}'`);
+    else if (/^--?[A-Za-z]/u.test(argument)) throw new Error(`Unknown option '${argument}'`);
     else expressionParts.push(argument);
   }
   return {
@@ -374,6 +374,33 @@ export function runCommand(args: readonly string[], io: CliIo = console): number
     return 2;
   }
 }
+export function tokenizeReplLine(line: string): string[] {
+  const tokens: string[] = [];
+  let current = "";
+  let quote: '"' | "'" | undefined;
+  let escaped = false;
+  for (const character of line.trim()) {
+    if (escaped) {
+      current += character;
+      escaped = false;
+    } else if (character === "\\") escaped = true;
+    else if (quote) {
+      if (character === quote) quote = undefined;
+      else current += character;
+    } else if (character === '"' || character === "'") quote = character;
+    else if (/\s/u.test(character)) {
+      if (current) {
+        tokens.push(current);
+        current = "";
+      }
+    } else current += character;
+  }
+  if (escaped) current += "\\";
+  if (quote) throw new Error("Unterminated quoted expression");
+  if (current) tokens.push(current);
+  return tokens;
+}
+
 function startRepl(): void {
   const terminal = readline.createInterface({ input: process.stdin, output: process.stdout });
   terminal.setPrompt("zim> ");
@@ -382,7 +409,7 @@ function startRepl(): void {
   terminal.on("line", (line) => {
     const trimmed = line.trim();
     if (trimmed === "exit" || trimmed === "quit") return terminal.close();
-    if (trimmed) process.exitCode = runCommand(trimmed.split(/\s+/u));
+    if (trimmed) process.exitCode = runCommand(tokenizeReplLine(trimmed));
     terminal.prompt();
   });
 }

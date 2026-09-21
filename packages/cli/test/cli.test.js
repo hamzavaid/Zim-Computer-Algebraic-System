@@ -5,6 +5,7 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const executable = path.resolve(__dirname, "../dist/cli.js");
+const { runCommand, tokenizeReplLine } = require("../dist/cli.js");
 const fixtures = JSON.parse(fs.readFileSync(path.resolve(__dirname, "fixtures.json"), "utf8"));
 
 test("CLI fixtures return stable output and exit codes", () => {
@@ -105,4 +106,32 @@ test("new commands validate required options and preserve unsupported exit statu
   );
   assert.equal(invalidGuess.status, 2);
   assert.match(invalidGuess.stderr, /initial guess/i);
+});
+
+test("REPL tokenization preserves minus operators and quoted expressions", () => {
+  assert.deepEqual(tokenizeReplLine('solve --variable x "x^2 = 4"'), [
+    "solve",
+    "--variable",
+    "x",
+    "x^2 = 4",
+  ]);
+  assert.deepEqual(tokenizeReplLine("solve --variable x x^2 = 4 - 2"), [
+    "solve",
+    "--variable",
+    "x",
+    "x^2",
+    "=",
+    "4",
+    "-",
+    "2",
+  ]);
+  const output = [];
+  const errors = [];
+  const exitCode = runCommand(tokenizeReplLine("solve --variable x x^2 = 4 - 2"), {
+    log: (message) => output.push(message),
+    error: (message) => errors.push(message),
+  });
+  assert.equal(exitCode, 0);
+  assert.deepEqual(errors, []);
+  assert.match(output.join("\n"), /x =/);
 });
