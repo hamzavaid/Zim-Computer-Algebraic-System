@@ -1,4 +1,4 @@
-# Zim 2.0 Computer Algebraic System
+# Zim 2.4.5 Computer Algebraic System
 
 Zim 2.0 is a TypeScript symbolic-mathematics engine with strict parsing, exact rational arithmetic, deterministic simplification, polynomial and rational-equation solving, selected symbolic transcendental solving, exact linear systems, a versioned backend API, and a command-line interface.
 
@@ -97,7 +97,22 @@ The public package also exports `toLatex()`. API v1 remains compatible and conve
 
 Solve requests can set `includeSteps: true` to receive a canonical nested derivation graph plus the compatible flat-step view. Stable rule IDs, localized metadata, accepted/rejected evidence, node budgets, and concise/classroom/diagnostic renderers are also available through the v2 `derive` operation. Simplification requests return their applied rewrite rules through the same option.
 
-## CLI
+## CLI reference
+
+| Command            | Purpose                                   |
+| ------------------ | ----------------------------------------- |
+| `zim parse`        | Parse input and inspect the AST           |
+| `zim simplify`     | Simplify an expression                    |
+| `zim solve`        | Solve an equation or supported relation   |
+| `zim relation`     | Explicitly solve a relation or inequality |
+| `zim system`       | Solve a linear system                     |
+| `zim nonlinear`    | Solve a supported nonlinear system        |
+| `zim polynomial`   | Analyze polynomial roots                  |
+| `zim derive`       | Generate a derivation/explanation         |
+| `zim format`       | Format an expression                      |
+| `zim latex`        | Generate LaTeX                            |
+| `zim capabilities` | Inspect engine capabilities               |
+| `zim repl`         | Start the interactive CLI                 |
 
 ```sh
 npm run build
@@ -106,11 +121,64 @@ node packages/cli/dist/cli.js simplify --trace "1 * (2 + 3)"
 node packages/cli/dist/cli.js solve --variable x "x^2 = 4"
 node packages/cli/dist/cli.js solve --variable x --domain complex "x^2 + 1 = 0"
 node packages/cli/dist/cli.js system --variables x,y "x + y = 5; x - y = 1"
+node packages/cli/dist/cli.js relation --variable x "x^2 - 4 < 0"
+node packages/cli/dist/cli.js polynomial --variable x "x^3 - 2"
+node packages/cli/dist/cli.js nonlinear --variables x,y "x * y = 2; x + y = 3"
+node packages/cli/dist/cli.js derive --variable x --render-mode classroom "sqrt(x + 1) = x - 1"
+node packages/cli/dist/cli.js format "(x + 1) * (x - 1)"
 node packages/cli/dist/cli.js latex "x^2 = 1/4"
+node packages/cli/dist/cli.js capabilities
 node packages/cli/dist/cli.js repl
 ```
 
+Command options:
+
+- `parse`: `--json`
+- `simplify`: `--trace`, `--json`
+- `solve`: `--variable, -v <name>`, `--domain <real|complex>`, `--json`, `--latex`
+- `relation`: `--variable, -v <name>`, `--json`
+- `system`: `--variables <name,...>`, `--json`
+- `polynomial`: `--variable, -v <name>`, `--json`
+- `nonlinear`: `--variables <name,...>`, `--mode <exact|numeric>`, `--initial-guess <x=...,y=...>`, `--max-iterations <n>`, `--tolerance <number>`, `--max-resultant-degree <n>`, `--json`
+- `derive`: `--variable, -v <name>`, `--render-mode <concise|classroom|diagnostic>`, `--locale <locale>`, `--max-derivation-nodes <n>`, `--json`
+- `capabilities`: `--json`
+
+Use `zim --help` or `zim <command> --help` for terminal help. Human-readable text is the default; `--json` returns the complete API-v2 envelope. The `solve` command automatically routes inequalities to the relation solver.
+
 Exit code `0` means success, `2` means invalid CLI/input syntax, and `3` means the expression parsed correctly but solving is unsupported.
+
+## API v2 operations
+
+API v2 (`2.0-beta`) supports `parse`, `simplify`, `solve`, `solveSystem`, `format`, `latex`, `capabilities`, `analyzePolynomial`, `solveRelation`, `solveNonlinearSystem`, and `derive`. Every operation is available from `executeV2`, the CLI, and the local GUI. The GUI server accepts the same request envelopes at `POST /api/v2`; `POST /api/v1` remains available.
+
+```js
+executeV2({
+  apiVersion: "2.0-beta",
+  operation: "solveRelation",
+  relation: "x^2 - 4 < 0",
+  variable: "x",
+});
+executeV2({
+  apiVersion: "2.0-beta",
+  operation: "analyzePolynomial",
+  expression: "x^3 - 2",
+  variable: "x",
+});
+executeV2({
+  apiVersion: "2.0-beta",
+  operation: "solveNonlinearSystem",
+  equations: ["x*y=2", "x+y=3"],
+  variables: ["x", "y"],
+});
+executeV2({
+  apiVersion: "2.0-beta",
+  operation: "derive",
+  expression: "sqrt(x+1)=x-1",
+  variable: "x",
+  renderMode: "classroom",
+});
+executeV2({ apiVersion: "2.0-beta", operation: "capabilities" });
+```
 
 ## Supported syntax
 
