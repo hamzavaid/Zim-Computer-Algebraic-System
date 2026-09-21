@@ -114,6 +114,44 @@ test("server rejects oversized and malformed requests safely", async () => {
   assert.equal((await malformed.json()).error.code, "INVALID_JSON");
 });
 
+test("API v2 HTTP transport preserves the public response envelope", async () => {
+  const response = await fetch(`${endpoint}/api/v2`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      apiVersion: "2.0-beta",
+      requestId: "gui-test",
+      operation: "capabilities",
+    }),
+  });
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(payload.apiVersion, "2.0-beta");
+  assert.equal(payload.requestId, "gui-test");
+  assert.equal(payload.status, "ok");
+  assert.equal(payload.result.release, "2.4.5");
+  assert.equal(typeof payload.timing.totalMs, "number");
+});
+
+test("GUI explicitly exposes every API v2 operation", () => {
+  const operations = [
+    "parse",
+    "simplify",
+    "solve",
+    "solveSystem",
+    "format",
+    "latex",
+    "capabilities",
+    "analyzePolynomial",
+    "solveRelation",
+    "solveNonlinearSystem",
+    "derive",
+  ];
+  for (const operation of operations) assert.match(html, new RegExp(`value=["']${operation}["']`));
+  assert.match(html, /id=["']raw-request-output["']/);
+  assert.match(html, /id=["']raw-response-output["']/);
+});
+
 test("GUI and core packages remain independently versionable", () => {
   const corePackage = JSON.parse(
     fs.readFileSync(path.join(workspace, "packages/core/package.json"), "utf8"),

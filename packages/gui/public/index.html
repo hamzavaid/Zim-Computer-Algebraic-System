@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Zim exact symbolic mathematics interface" />
-    <title>Zim 2.0</title>
+    <title>Zim 2.4.5</title>
     <link rel="stylesheet" href="/styles.css" />
     <script src="/app.js" defer></script>
   </head>
@@ -13,7 +13,7 @@
     <header class="site-header">
       <div>
         <p class="eyebrow">Symbolic mathematics workspace</p>
-        <h1>Zim 2.0</h1>
+        <h1>Zim 2.4.5</h1>
       </div>
       <button id="theme-toggle" class="secondary" type="button" aria-pressed="false">
         Toggle theme
@@ -29,6 +29,20 @@
           </div>
           <span id="status-output" role="status" aria-live="polite">Ready</span>
         </div>
+        <label for="operation-input">Operation</label>
+        <select id="operation-input">
+          <option value="parse">Parse</option>
+          <option value="simplify">Simplify</option>
+          <option value="solve" selected>Solve</option>
+          <option value="solveSystem">Linear System</option>
+          <option value="solveRelation">Relation</option>
+          <option value="analyzePolynomial">Polynomial Analysis</option>
+          <option value="solveNonlinearSystem">Nonlinear System</option>
+          <option value="derive">Derivation</option>
+          <option value="format">Format</option>
+          <option value="latex">LaTeX</option>
+          <option value="capabilities">Capabilities</option>
+        </select>
         <label for="expression-input">Expression or equation</label>
         <textarea
           id="expression-input"
@@ -48,15 +62,51 @@
             <option value="real">Real</option>
             <option value="complex">Complex</option>
           </select>
+          <label for="variables-input">Variables</label>
+          <input id="variables-input" value="x,y" autocomplete="off" />
+          <label for="mode-input">Mode</label>
+          <select id="mode-input">
+            <option value="exact">Exact</option>
+            <option value="numeric">Numeric</option>
+          </select>
+          <label for="initial-guess-input">Initial guess</label>
+          <input id="initial-guess-input" placeholder="x=1,y=2" autocomplete="off" />
+          <label for="max-iterations-input">Max iterations</label>
+          <input id="max-iterations-input" type="number" min="1" placeholder="100" />
+          <label for="tolerance-input">Tolerance</label>
+          <input id="tolerance-input" type="number" min="0" step="any" placeholder="1e-10" />
+          <label for="max-resultant-degree-input">Max resultant degree</label>
+          <input id="max-resultant-degree-input" type="number" min="1" placeholder="8" />
+          <label for="render-mode-input">Render mode</label>
+          <select id="render-mode-input">
+            <option value="concise">Concise</option>
+            <option value="classroom" selected>Classroom</option>
+            <option value="diagnostic">Diagnostic</option>
+          </select>
+          <label for="locale-input">Locale</label>
+          <input id="locale-input" value="en" autocomplete="off" />
+          <label for="max-derivation-nodes-input">Max derivation nodes</label>
+          <input id="max-derivation-nodes-input" type="number" min="1" placeholder="2000" />
         </div>
         <div class="actions" aria-label="Expression actions">
           <button type="button" data-operation="simplify">Simplify</button>
           <button type="button" data-operation="solve">Solve</button>
           <button type="button" data-operation="parse" class="secondary">Parse tree</button>
+          <button type="button" id="run-button">Run selected operation</button>
           <button type="button" id="cancel-button" class="secondary" disabled>Cancel</button>
           <button type="button" id="clear-button" class="quiet">Clear</button>
         </div>
         <p id="error-output" class="error" role="alert" hidden></p>
+      </section>
+
+      <section class="card raw-panel" aria-labelledby="raw-heading">
+        <p class="eyebrow">API v2 developer inspection</p>
+        <h2 id="raw-heading">Raw request and response</h2>
+        <label for="raw-request-output">Request JSON</label>
+        <textarea id="raw-request-output" rows="8" spellcheck="false"></textarea>
+        <button type="button" id="run-raw-button" class="secondary">Submit raw API request</button>
+        <label for="raw-response-output">Response JSON</label>
+        <pre id="raw-response-output" class="code-output"></pre>
       </section>
 
       <section class="card result" aria-labelledby="result-heading">

@@ -1,7 +1,7 @@
 import { createServer, IncomingMessage, Server, ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { ApiRequest, execute } from "@zim/core";
+import { ApiRequest, ApiV2Request, execute, executeV2 } from "@zim/core";
 
 export const MAX_REQUEST_BYTES = 64 * 1024;
 
@@ -80,22 +80,30 @@ async function handle(request: IncomingMessage, response: ServerResponse): Promi
       return;
     }
   }
-  if (request.method === "POST" && requestUrl.pathname === "/api/v1") {
+  if (
+    request.method === "POST" &&
+    (requestUrl.pathname === "/api/v1" || requestUrl.pathname === "/api/v2")
+  ) {
+    const v2 = requestUrl.pathname === "/api/v2";
     const body = await readBody(request);
     if (body.tooLarge) {
       sendJson(response, 413, {
-        version: "1.0",
+        ...(v2 ? { apiVersion: "2.0-beta" } : { version: "1.0" }),
         status: "error",
         error: { code: "REQUEST_TOO_LARGE", message: "Request exceeds 65536 bytes" },
       });
       return;
     }
     try {
-      const parsed = JSON.parse(body.text) as ApiRequest;
-      sendJson(response, 200, execute(parsed));
+      const parsed = JSON.parse(body.text) as ApiRequest | ApiV2Request;
+      sendJson(
+        response,
+        200,
+        v2 ? executeV2(parsed as ApiV2Request) : execute(parsed as ApiRequest),
+      );
     } catch {
       sendJson(response, 400, {
-        version: "1.0",
+        ...(v2 ? { apiVersion: "2.0-beta" } : { version: "1.0" }),
         status: "error",
         error: { code: "INVALID_JSON", message: "Request body must be valid JSON" },
       });
