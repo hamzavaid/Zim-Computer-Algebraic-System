@@ -51,6 +51,7 @@ export * from "./calculus/differentiate";
 export * from "./calculus/limit";
 export * from "./calculus/integrationRules";
 export * from "./calculus/integrate";
+export * from "./calculus/quadrature";
 export * from "./values/algebraic";
 export * from "./numeric/polynomialRoots";
 export * from "./sets/SolutionSet";

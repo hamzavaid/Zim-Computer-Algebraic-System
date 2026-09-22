@@ -95,3 +95,30 @@ export type IntegrationResult =
     }
   | { readonly kind: "unsupported"; readonly reason: string }
   | { readonly kind: "incomplete"; readonly reason: "node-budget-exceeded" };
+
+export interface QuadratureOptions {
+  readonly precisionDigits?: number;
+  readonly maxIterations?: number;
+  readonly maxSeriesTerms?: number;
+}
+
+export type QuadratureResult =
+  | {
+      readonly kind: "complete";
+      readonly value: string;
+      readonly errorBound: string;
+      readonly precisionDigits: number;
+      readonly converged: true;
+      readonly evaluations: number;
+      readonly iterations: number;
+      readonly method: "romberg-arbitrary-precision" | "exact-symbolic-fallback";
+    }
+  | {
+      readonly kind: "incomplete";
+      readonly reason: "iteration-budget-exceeded" | "series-budget-exceeded";
+      readonly precisionDigits: number;
+      readonly converged: false;
+      readonly evaluations: number;
+      readonly iterations: number;
+    }
+  | { readonly kind: "unsupported"; readonly reason: string };
