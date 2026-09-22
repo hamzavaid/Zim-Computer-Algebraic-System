@@ -15,7 +15,7 @@ import { SolveDomain } from "./SolveOptions";
 import { solvePolynomial } from "./polynomialSolver";
 import { SolveResult } from "./SolveResult";
 
-interface RationalPolynomial {
+export interface RationalPolynomial {
   readonly numerator: Polynomial;
   readonly denominator: Polynomial;
 }
@@ -72,7 +72,10 @@ function power(polynomial: Polynomial, exponent: number): Polynomial {
   return result;
 }
 
-function convert(expression: Expression, variableName: string): RationalPolynomialResult {
+export function toRationalPolynomial(
+  expression: Expression,
+  variableName: string,
+): RationalPolynomialResult {
   if (isExactNumber(expression)) {
     return {
       kind: "rational-function",
@@ -98,7 +101,7 @@ function convert(expression: Expression, variableName: string): RationalPolynomi
     return { kind: "unsupported", reason: `Function '${expression.name}' is not rational` };
   }
   if (expression.kind === "unary") {
-    const converted = convert(expression.operand, variableName);
+    const converted = toRationalPolynomial(expression.operand, variableName);
     if (converted.kind === "unsupported" || expression.operator === "+") return converted;
     return {
       kind: "rational-function",
@@ -124,7 +127,7 @@ function convert(expression: Expression, variableName: string): RationalPolynomi
     if (!Number.isSafeInteger(exponent) || Math.abs(exponent) > 32) {
       return { kind: "unsupported", reason: "Rational-function exponent is out of range" };
     }
-    const base = convert(expression.left, variableName);
+    const base = toRationalPolynomial(expression.left, variableName);
     if (base.kind === "unsupported") return base;
     const positive = Math.abs(exponent);
     return {
@@ -142,9 +145,9 @@ function convert(expression: Expression, variableName: string): RationalPolynomi
     };
   }
 
-  const left = convert(expression.left, variableName);
+  const left = toRationalPolynomial(expression.left, variableName);
   if (left.kind === "unsupported") return left;
-  const right = convert(expression.right, variableName);
+  const right = toRationalPolynomial(expression.right, variableName);
   if (right.kind === "unsupported") return right;
   const a = left.value;
   const b = right.value;
@@ -184,7 +187,7 @@ function convert(expression: Expression, variableName: string): RationalPolynomi
 }
 
 export function isRationalIn(expression: Expression, variableName: string): boolean {
-  return convert(expression, variableName).kind === "rational-function";
+  return toRationalPolynomial(expression, variableName).kind === "rational-function";
 }
 
 /** Original restrictions must survive cross multiplication, including nested reciprocals. */
@@ -204,7 +207,7 @@ function domainPolynomials(expression: Expression, variableName: string): Polyno
         ? expression.left
         : undefined;
   if (restricted) {
-    const converted = convert(restricted, variableName);
+    const converted = toRationalPolynomial(restricted, variableName);
     if (converted.kind === "rational-function") restrictions.push(converted.value.numerator);
   }
   return restrictions;
@@ -258,9 +261,9 @@ export function solveRationalEquation(
   variableName: string,
   domain: SolveDomain,
 ): SolveResult {
-  const left = convert(equation.left, variableName);
+  const left = toRationalPolynomial(equation.left, variableName);
   if (left.kind === "unsupported") return left;
-  const right = convert(equation.right, variableName);
+  const right = toRationalPolynomial(equation.right, variableName);
   if (right.kind === "unsupported") return right;
   if (degree(left.value.denominator) === null || degree(right.value.denominator) === null) {
     return { kind: "unsupported", reason: "Division by zero is undefined" };
@@ -285,7 +288,7 @@ export function solveRationalEquation(
 export function containsVariableDenominator(expression: Expression, variableName: string): boolean {
   if (expression.kind === "binary") {
     if (expression.operator === "/") {
-      const converted = convert(expression.right, variableName);
+      const converted = toRationalPolynomial(expression.right, variableName);
       if (converted.kind === "rational-function" && degree(converted.value.numerator) !== 0)
         return true;
     }

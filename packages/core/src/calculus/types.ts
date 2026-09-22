@@ -25,3 +25,31 @@ export interface DifferentiationRuleDescriptor {
   readonly family: "arithmetic" | "power" | "elementary-function";
   readonly description: string;
 }
+
+export type LimitPoint = Expression | "infinity" | "-infinity";
+export type LimitDirection = "both" | "left" | "right";
+
+export type LimitResult =
+  | {
+      readonly kind: "finite";
+      readonly value: Expression;
+      readonly variable: string;
+      readonly point: LimitPoint;
+      readonly direction: LimitDirection;
+      readonly exact: true;
+      readonly method: string;
+    }
+  | {
+      readonly kind: "infinite";
+      readonly sign: 1 | -1;
+      readonly variable: string;
+      readonly point: LimitPoint;
+      readonly direction: LimitDirection;
+      readonly method: string;
+    }
+  | { readonly kind: "unsupported"; readonly reason: string }
+  | { readonly kind: "incomplete"; readonly reason: "node-budget-exceeded" };
+
+export interface LimitOptions extends CalculusBudget {
+  readonly direction?: LimitDirection;
+}

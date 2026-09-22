@@ -48,6 +48,7 @@ export * from "./runtime/budget";
 export * from "./calculus/types";
 export * from "./calculus/differentiationRules";
 export * from "./calculus/differentiate";
+export * from "./calculus/limit";
 export * from "./values/algebraic";
 export * from "./numeric/polynomialRoots";
 export * from "./sets/SolutionSet";
