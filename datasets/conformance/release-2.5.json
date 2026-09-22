@@ -1,0 +1,58 @@
+[
+  {
+    "id": "derivative-chain-rule",
+    "request": { "operation": "differentiate", "expression": "sin(x^2)", "variables": ["x"] },
+    "status": "ok",
+    "kind": "complete"
+  },
+  {
+    "id": "partial-derivative",
+    "request": { "operation": "differentiate", "expression": "x^2 * y^3", "variables": ["x", "y"] },
+    "status": "ok",
+    "kind": "complete"
+  },
+  {
+    "id": "removable-limit",
+    "request": { "operation": "limit", "expression": "sin(x) / x", "variable": "x", "point": "0" },
+    "status": "ok",
+    "kind": "finite"
+  },
+  {
+    "id": "one-sided-pole",
+    "request": {
+      "operation": "limit",
+      "expression": "1 / x",
+      "variable": "x",
+      "point": "0",
+      "direction": "right"
+    },
+    "status": "ok",
+    "kind": "infinite"
+  },
+  {
+    "id": "verified-antiderivative",
+    "request": { "operation": "integrate", "expression": "x^4 + exp(x)", "variable": "x" },
+    "status": "ok",
+    "kind": "complete"
+  },
+  {
+    "id": "unevaluated-antiderivative",
+    "request": { "operation": "integrate", "expression": "sin(x^2)", "variable": "x" },
+    "status": "unsupported",
+    "kind": "unevaluated"
+  },
+  {
+    "id": "precision-quadrature",
+    "request": {
+      "operation": "integrate",
+      "expression": "exp(-x^2)",
+      "variable": "x",
+      "lower": "0",
+      "upper": "1",
+      "integrationMode": "numeric",
+      "precisionDigits": 20
+    },
+    "status": "ok",
+    "kind": "complete"
+  }
+]

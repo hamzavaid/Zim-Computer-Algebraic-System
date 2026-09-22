@@ -71,7 +71,7 @@ test("API v2 workbench exercises every developer operation", async ({ page }) =>
   }
   await operation.selectOption("capabilities");
   await run.click();
-  await expect(response).toContainText('"release": "2.4.6"');
+  await expect(response).toContainText('"release": "2.5.0"');
   await expect(page.getByRole("button", { name: "Cancel" })).toBeDisabled();
   await expect(page.locator("#history-output li")).not.toHaveCount(0);
 });
@@ -118,7 +118,7 @@ test("operation controls, capability summary, and LaTeX follow selected operatio
   await operation.selectOption("capabilities");
   await expect(page.getByLabel("Expression or equation")).toBeHidden();
   await run.click();
-  await expect(page.locator("#math-output")).toContainText("Release 2.4.6");
+  await expect(page.locator("#math-output")).toContainText("Release 2.5.0");
   await expect(page.locator(".raw-panel")).toBeHidden();
   await operation.selectOption("solveRelation");
   await page.getByLabel("Expression or equation").fill("sqrt(x + 1) = x - 1");
@@ -143,4 +143,34 @@ test("pretty results are default and JSON can be shown alongside them", async ({
   await page.getByRole("button", { name: "Run Operation" }).click();
   await expect(page.locator("#math-output")).toContainText("Degree: 3");
   await expect(page.locator("#result-json-output")).toContainText('"complexRoots"');
+});
+
+test("calculus operations expose only their controls and render exact output", async ({ page }) => {
+  await page.goto("/");
+  const operation = page.getByLabel("Operation");
+  const expression = page.getByLabel("Expression or equation");
+  const run = page.getByRole("button", { name: "Run Operation" });
+
+  await operation.selectOption("differentiate");
+  await page.getByLabel("Variables").fill("x");
+  await expression.fill("x^3");
+  await run.click();
+  await expect(page.locator("#result-output")).toContainText("3 * x ^ 2");
+  await expect(page.locator("#latex-output")).toContainText("{x}^{2}");
+
+  await operation.selectOption("limit");
+  await expect(page.getByLabel("Approach")).toBeVisible();
+  await expression.fill("sin(x) / x");
+  await run.click();
+  await expect(page.locator("#result-output")).toContainText("= 1");
+
+  await operation.selectOption("integrate");
+  await expect(page.getByLabel("Precision digits")).toBeHidden();
+  await page.getByLabel("Integration mode").selectOption("numeric");
+  await expect(page.getByLabel("Precision digits")).toBeVisible();
+  await page.getByLabel("Lower bound").fill("0");
+  await page.getByLabel("Upper bound").fill("1");
+  await expression.fill("x^2");
+  await run.click();
+  await expect(page.locator("#result-output")).toContainText("0.333333");
 });

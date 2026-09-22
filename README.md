@@ -1,6 +1,6 @@
-# Zim 2.4.6 Computer Algebraic System
+# Zim 2.5.0 Computer Algebraic System
 
-Zim 2.0 is a TypeScript symbolic-mathematics engine with strict parsing, exact rational arithmetic, deterministic simplification, polynomial and rational-equation solving, selected symbolic transcendental solving, exact linear systems, a versioned backend API, and a command-line interface.
+Zim 2.5 is a TypeScript symbolic-mathematics engine with strict parsing, exact rational arithmetic, deterministic simplification, equation and system solving, symbolic differentiation, conservative limits, verified symbolic integration, arbitrary-precision numerical quadrature, a versioned backend API, and command-line and graphical interfaces.
 
 The former JavaScript implementation is preserved under `legacy/` for comparison only. Production code in `packages/core` does not import it.
 
@@ -101,20 +101,23 @@ Solve requests can set `includeSteps: true` to receive a canonical nested deriva
 
 ## CLI reference
 
-| Command            | Purpose                                   |
-| ------------------ | ----------------------------------------- |
-| `zim parse`        | Parse input and inspect the AST           |
-| `zim simplify`     | Simplify an expression                    |
-| `zim solve`        | Solve an equation or supported relation   |
-| `zim relation`     | Explicitly solve a relation or inequality |
-| `zim system`       | Solve a linear system                     |
-| `zim nonlinear`    | Solve a supported nonlinear system        |
-| `zim polynomial`   | Analyze polynomial roots                  |
-| `zim derive`       | Generate a derivation/explanation         |
-| `zim format`       | Format an expression                      |
-| `zim latex`        | Generate LaTeX                            |
-| `zim capabilities` | Inspect engine capabilities               |
-| `zim repl`         | Start the interactive CLI                 |
+| Command             | Purpose                                   |
+| ------------------- | ----------------------------------------- |
+| `zim parse`         | Parse input and inspect the AST           |
+| `zim simplify`      | Simplify an expression                    |
+| `zim solve`         | Solve an equation or supported relation   |
+| `zim relation`      | Explicitly solve a relation or inequality |
+| `zim system`        | Solve a linear system                     |
+| `zim nonlinear`     | Solve a supported nonlinear system        |
+| `zim polynomial`    | Analyze polynomial roots                  |
+| `zim derive`        | Generate a derivation/explanation         |
+| `zim differentiate` | Compute exact ordered derivatives         |
+| `zim limit`         | Evaluate supported exact limits           |
+| `zim integrate`     | Integrate symbolically or numerically     |
+| `zim format`        | Format an expression                      |
+| `zim latex`         | Generate LaTeX                            |
+| `zim capabilities`  | Inspect engine capabilities               |
+| `zim repl`          | Start the interactive CLI                 |
 
 ```sh
 npm run build
@@ -127,6 +130,10 @@ node packages/cli/dist/cli.js relation --variable x "x^2 - 4 < 0"
 node packages/cli/dist/cli.js polynomial --variable x "x^3 - 2"
 node packages/cli/dist/cli.js nonlinear --variables x,y "x * y = 2; x + y = 3"
 node packages/cli/dist/cli.js derive --variable x --render-mode classroom "sqrt(x + 1) = x - 1"
+node packages/cli/dist/cli.js differentiate --variables x "x^3 + sin(x)"
+node packages/cli/dist/cli.js limit --variable x --point 0 "sin(x) / x"
+node packages/cli/dist/cli.js integrate --variable x "x^2"
+node packages/cli/dist/cli.js integrate --variable x --lower 0 --upper 1 --integration-mode numeric --precision-digits 30 "exp(-x^2)"
 node packages/cli/dist/cli.js format "(x + 1) * (x - 1)"
 node packages/cli/dist/cli.js latex "x^2 = 1/4"
 node packages/cli/dist/cli.js capabilities
@@ -143,6 +150,9 @@ Command options:
 - `polynomial`: `--variable, -v <name>`, `--json`
 - `nonlinear`: `--variables <name,...>`, `--mode <exact|numeric>`, `--initial-guess <x=...,y=...>`, `--max-iterations <n>`, `--tolerance <number>`, `--max-resultant-degree <n>`, `--json`
 - `derive`: `--variable, -v <name>`, `--render-mode <concise|classroom|diagnostic>`, `--locale <locale>`, `--max-derivation-nodes <n>`, `--json`
+- `differentiate`: `--variables <name,...>`, `--json`, `--latex`
+- `limit`: `--variable, -v <name>`, `--point <value|infinity>`, `--direction <both|left|right>`, `--json`, `--latex`
+- `integrate`: `--variable, -v <name>`, optional exact `--lower` and `--upper`, `--integration-mode <symbolic|numeric>`, `--precision-digits <n>`, `--max-iterations <n>`, `--max-series-terms <n>`, `--json`, `--latex`
 - `capabilities`: `--json`
 
 Use `zim --help` or `zim <command> --help` for terminal help. Human-readable text is the default; `--json` returns the complete API-v2 envelope. The `solve` command automatically routes inequalities to the relation solver.
@@ -153,7 +163,7 @@ Exit code `0` means success, `2` means invalid CLI/input syntax, and `3` means t
 
 ## API v2 operations
 
-API v2 (`2.0-beta`) supports `parse`, `simplify`, `solve`, `solveSystem`, `format`, `latex`, `capabilities`, `analyzePolynomial`, `solveRelation`, `solveNonlinearSystem`, and `derive`. Every operation is available from `executeV2`, the CLI, and the local GUI. The GUI server accepts the same request envelopes at `POST /api/v2`; `POST /api/v1` remains available.
+API v2 (`2.0-beta`) supports `parse`, `simplify`, `solve`, `solveSystem`, `format`, `latex`, `capabilities`, `analyzePolynomial`, `solveRelation`, `solveNonlinearSystem`, `derive`, `differentiate`, `limit`, and `integrate`. Every operation is available from `executeV2`, the CLI, and the local GUI. The GUI server accepts the same request envelopes at `POST /api/v2`; `POST /api/v1` remains available.
 
 ```js
 executeV2({
@@ -220,6 +230,16 @@ Rational-equation verification retains restrictions from the original, unsimplif
 - Bounded two-variable nonlinear systems using exact substitution, square-resultant elimination, or opt-in Newton iteration with Jacobian and residual diagnostics
 
 General irreducible cubic/quartic radical formulas, arbitrary nonlinear elimination, and arbitrary transcendental rearrangement remain explicit unsupported boundaries. Irreducible polynomials are available through algebraic intervals and numerical approximations rather than potentially explosive radical forms. Nonlinear systems outside the bounded two-variable strategies return explicit unsupported or incomplete results.
+
+## Calculus coverage
+
+- Exact first, higher-order, and ordered partial derivatives with product, quotient, chain, power, and elementary-function rules
+- Conservative finite, one-sided, removable-singularity, pole, and infinity limits
+- Verified symbolic antiderivatives for polynomial, power, exponential, logarithmic, and basic trigonometric families
+- Definite integration with interval-domain checks
+- Arbitrary-precision numerical quadrature with requested precision, error evidence, and explicit iteration or series budget outcomes
+
+Unsupported antiderivatives and unproved limits remain explicitly unevaluated or unsupported; Zim does not guess a plausible-looking result.
 
 ## Repository map
 

@@ -12,6 +12,15 @@ import { serializeSolutionSet } from "../sets/SolutionSet";
 import { solveNonlinearSystem } from "../solve/nonlinearSystemSolver";
 import { buildSolveDerivation, renderDerivation } from "../evidence/derivation";
 import { ZimError } from "../errors/ZimError";
+import { differentiate } from "../calculus/differentiate";
+import { limit } from "../calculus/limit";
+import { integrate } from "../calculus/integrate";
+import { numericalIntegrate } from "../calculus/quadrature";
+import { LimitPoint } from "../calculus/types";
+import { ExactNumber, isExactNumber } from "../ast/rational";
+import { format } from "../format/formatter";
+import { toLatex } from "../format/latex";
+import { simplifyExpression } from "../simplify/simplify";
 
 export const API_VERSION_V2 = "2.0-beta" as const;
 
@@ -65,6 +74,29 @@ export type ApiV2Request =
       readonly variable: string;
       readonly renderMode?: "concise" | "classroom" | "diagnostic";
       readonly locale?: string;
+    })
+  | (BaseRequest & {
+      readonly operation: "differentiate";
+      readonly expression: string;
+      readonly variables: readonly string[];
+    })
+  | (BaseRequest & {
+      readonly operation: "limit";
+      readonly expression: string;
+      readonly variable: string;
+      readonly point: string;
+      readonly direction?: "both" | "left" | "right";
+    })
+  | (BaseRequest & {
+      readonly operation: "integrate";
+      readonly expression: string;
+      readonly variable: string;
+      readonly lower?: string;
+      readonly upper?: string;
+      readonly integrationMode?: "symbolic" | "numeric";
+      readonly precisionDigits?: number;
+      readonly maxIterations?: number;
+      readonly maxSeriesTerms?: number;
     })
   | (BaseRequest & {
       readonly operation: "solveSystem";
@@ -198,6 +230,37 @@ function validateRequest(value: unknown): value is ApiV2Request {
           ["concise", "classroom", "diagnostic"].includes(value.renderMode as string)) &&
         (value.locale === undefined || typeof value.locale === "string")
       );
+    case "differentiate":
+      return expression() && strings(value.variables) && value.variables.every(validName);
+    case "limit":
+      return (
+        expression() &&
+        variableName() &&
+        typeof value.point === "string" &&
+        value.point.trim() !== "" &&
+        (value.direction === undefined ||
+          ["both", "left", "right"].includes(value.direction as string))
+      );
+    case "integrate": {
+      const bounds =
+        (value.lower === undefined && value.upper === undefined) ||
+        (typeof value.lower === "string" &&
+          value.lower.trim() !== "" &&
+          typeof value.upper === "string" &&
+          value.upper.trim() !== "");
+      return (
+        expression() &&
+        variableName() &&
+        bounds &&
+        (value.integrationMode === undefined ||
+          value.integrationMode === "symbolic" ||
+          value.integrationMode === "numeric") &&
+        [value.precisionDigits, value.maxIterations, value.maxSeriesTerms].every(
+          (item) =>
+            item === undefined || (typeof item === "number" && Number.isInteger(item) && item > 0),
+        )
+      );
+    }
     default:
       return false;
   }
@@ -351,7 +414,10 @@ function v1Request(request: ApiV2Request): ApiRequest | undefined {
     request.operation === "analyzePolynomial" ||
     request.operation === "solveRelation" ||
     request.operation === "solveNonlinearSystem" ||
-    request.operation === "derive"
+    request.operation === "derive" ||
+    request.operation === "differentiate" ||
+    request.operation === "limit" ||
+    request.operation === "integrate"
   )
     return undefined;
   if (request.operation === "solveSystem") {
@@ -363,6 +429,33 @@ function v1Request(request: ApiV2Request): ApiRequest | undefined {
     };
   }
   return { version: "1.0", ...request, operation: request.operation };
+}
+
+function parsedExpression(source: string, budget: ResourceBudget = {}): Expression {
+  const tree = parseBounded(source, budget);
+  if (tree.kind === "equation" || tree.kind === "relation")
+    throw new ZimError("DOMAIN_ERROR", "This calculus operation requires an expression");
+  return tree;
+}
+
+function exactBound(source: string, budget: ResourceBudget = {}): ExactNumber {
+  const value = simplifyExpression(parsedExpression(source, budget)).expression;
+  if (!isExactNumber(value))
+    throw new ZimError("DOMAIN_ERROR", "Integration bounds must be exact numbers");
+  return value;
+}
+
+function limitPoint(source: string, budget: ResourceBudget = {}): LimitPoint {
+  if (source === "infinity" || source === "+infinity" || source === "∞") return "infinity";
+  if (source === "-infinity" || source === "-∞") return "-infinity";
+  const point = simplifyExpression(parsedExpression(source, budget)).expression;
+  if (!isExactNumber(point))
+    throw new ZimError("DOMAIN_ERROR", "Limit point must be an exact number or infinity");
+  return point;
+}
+
+function serializePoint(point: LimitPoint): unknown {
+  return typeof point === "string" ? point : serializeExpression(point);
 }
 
 function mappedStatus(response: ApiResponse): ApiV2Response["status"] {
@@ -542,6 +635,134 @@ export function executeV2(request: unknown): ApiV2Response {
             mode: request.renderMode ?? "classroom",
             locale: request.locale,
           }),
+        },
+        diagnostics: { operation: request.operation },
+      });
+    }
+    if (request.operation === "differentiate") {
+      const result = differentiate(
+        parsedExpression(request.expression, request.budget),
+        request.variables,
+        {
+          maxNodes: request.budget?.maxAstNodes,
+        },
+      );
+      if (result.kind !== "complete")
+        return finish({
+          status: result.kind === "incomplete" ? "budget-exceeded" : "unsupported",
+          result,
+          diagnostics: { operation: request.operation },
+        });
+      return finish({
+        status: "ok",
+        result: {
+          ...result,
+          expression: serializeExpression(result.expression),
+          text: format(result.expression),
+          latex: toLatex(result.expression),
+        },
+        diagnostics: { operation: request.operation },
+      });
+    }
+    if (request.operation === "limit") {
+      const point = limitPoint(request.point, request.budget);
+      const result = limit(
+        parsedExpression(request.expression, request.budget),
+        request.variable,
+        point,
+        {
+          direction: request.direction,
+          maxNodes: request.budget?.maxAstNodes,
+        },
+      );
+      if (result.kind === "unsupported" || result.kind === "incomplete")
+        return finish({
+          status: result.kind === "incomplete" ? "budget-exceeded" : "unsupported",
+          result,
+          diagnostics: { operation: request.operation },
+        });
+      const valueText =
+        result.kind === "infinite" ? `${result.sign < 0 ? "-" : ""}infinity` : format(result.value);
+      const valueLatex =
+        result.kind === "infinite" ? `${result.sign < 0 ? "-" : ""}\\infty` : toLatex(result.value);
+      const pointText = typeof point === "string" ? point : format(point);
+      const pointLatex =
+        typeof point === "string"
+          ? point === "-infinity"
+            ? "-\\infty"
+            : "\\infty"
+          : toLatex(point);
+      return finish({
+        status: "ok",
+        result: {
+          ...result,
+          point: serializePoint(point),
+          ...(result.kind === "finite" ? { value: serializeExpression(result.value) } : {}),
+          text: `lim ${request.variable}->${pointText} = ${valueText}`,
+          latex: `\\lim_{${request.variable} \\to ${pointLatex}} = ${valueLatex}`,
+        },
+        diagnostics: { operation: request.operation },
+      });
+    }
+    if (request.operation === "integrate") {
+      const expression = parsedExpression(request.expression, request.budget);
+      const lower =
+        request.lower === undefined ? undefined : exactBound(request.lower, request.budget);
+      const upper =
+        request.upper === undefined ? undefined : exactBound(request.upper, request.budget);
+      if (request.integrationMode === "numeric") {
+        if (lower === undefined || upper === undefined)
+          throw new ZimError("DOMAIN_ERROR", "Numeric integration requires lower and upper bounds");
+        const result = numericalIntegrate(expression, request.variable, lower, upper, {
+          precisionDigits: request.precisionDigits,
+          maxIterations: request.maxIterations,
+          maxSeriesTerms: request.maxSeriesTerms,
+        });
+        return finish({
+          status:
+            result.kind === "complete"
+              ? "ok"
+              : result.kind === "incomplete"
+                ? "budget-exceeded"
+                : "unsupported",
+          result:
+            result.kind === "complete"
+              ? { ...result, text: result.value, latex: result.value }
+              : result,
+          diagnostics: { operation: request.operation },
+        });
+      }
+      const result = integrate(expression, request.variable, {
+        lower,
+        upper,
+        maxNodes: request.budget?.maxAstNodes,
+      });
+      if (result.kind !== "complete" && result.kind !== "definite")
+        return finish({
+          status: result.kind === "incomplete" ? "budget-exceeded" : "unsupported",
+          result:
+            result.kind === "unevaluated"
+              ? { ...result, integrand: serializeExpression(result.integrand) }
+              : result,
+          diagnostics: { operation: request.operation },
+        });
+      const output = result.kind === "complete" ? result.antiderivative : result.value;
+      return finish({
+        status: "ok",
+        result: {
+          ...result,
+          ...(result.kind === "complete"
+            ? {
+                expression: serializeExpression(result.expression),
+                antiderivative: serializeExpression(result.antiderivative),
+              }
+            : {
+                value: serializeExpression(result.value),
+                lower: serializeExpression(result.lower),
+                upper: serializeExpression(result.upper),
+              }),
+          text: `${format(output)}${result.kind === "complete" ? ` + ${result.constant}` : ""}`,
+          latex: `${toLatex(output)}${result.kind === "complete" ? ` + ${result.constant}` : ""}`,
         },
         diagnostics: { operation: request.operation },
       });

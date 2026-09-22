@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Zim exact symbolic mathematics interface" />
-    <title>Zim 2.4.6</title>
+    <title>Zim 2.5.0</title>
     <link rel="stylesheet" href="/styles.css" />
     <script src="/resultPresenter.js" defer></script>
     <script src="/app.js" defer></script>
@@ -14,7 +14,7 @@
     <header class="site-header">
       <div>
         <p class="eyebrow">Symbolic mathematics workspace</p>
-        <h1>Zim 2.4.6</h1>
+        <h1>Zim 2.5.0</h1>
       </div>
       <div class="header-actions">
         <details id="settings-panel" class="settings-panel">
@@ -35,6 +35,8 @@
             <input id="max-resultant-degree-input" type="number" min="1" placeholder="8" />
             <label for="max-derivation-nodes-input">Max derivation nodes</label>
             <input id="max-derivation-nodes-input" type="number" min="1" placeholder="2000" />
+            <label for="max-series-terms-input">Max series terms</label>
+            <input id="max-series-terms-input" type="number" min="1" placeholder="120" />
             <label class="checkbox-option"
               ><input id="show-api-panel" type="checkbox" /> API developer inspection</label
             >
@@ -74,6 +76,9 @@
           <option value="analyzePolynomial">Polynomial Analysis</option>
           <option value="solveNonlinearSystem">Nonlinear System</option>
           <option value="derive">Derivation</option>
+          <option value="differentiate">Differentiate</option>
+          <option value="limit">Limit</option>
+          <option value="integrate">Integrate</option>
           <option value="format">Format</option>
           <option value="latex">LaTeX</option>
           <option value="capabilities">Capabilities</option>
@@ -108,6 +113,25 @@
             <option value="classroom" selected>Classroom</option>
             <option value="diagnostic">Diagnostic</option>
           </select>
+          <label for="point-input">Approach</label>
+          <input id="point-input" value="0" autocomplete="off" />
+          <label for="direction-input">Direction</label>
+          <select id="direction-input">
+            <option value="both">Both sides</option>
+            <option value="left">From left</option>
+            <option value="right">From right</option>
+          </select>
+          <label for="lower-input">Lower bound</label>
+          <input id="lower-input" placeholder="Optional" autocomplete="off" />
+          <label for="upper-input">Upper bound</label>
+          <input id="upper-input" placeholder="Optional" autocomplete="off" />
+          <label for="integration-mode-input">Integration mode</label>
+          <select id="integration-mode-input">
+            <option value="symbolic">Symbolic</option>
+            <option value="numeric">Numeric</option>
+          </select>
+          <label for="precision-digits-input">Precision digits</label>
+          <input id="precision-digits-input" type="number" min="1" max="200" value="30" />
         </div>
         <div class="actions" aria-label="Expression actions">
           <button type="button" id="run-button">Run Operation</button>

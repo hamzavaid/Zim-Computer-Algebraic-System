@@ -50,7 +50,10 @@ test("v2 parity commands expose human and JSON output", () => {
       ["derive", "--variable", "x", "--render-mode", "classroom", "sqrt(x + 1) = x - 1"],
       /Verified result/i,
     ],
-    [["capabilities"], /2\.4\.6/],
+    [["capabilities"], /2\.5\.0/],
+    [["differentiate", "--variables", "x", "x^3"], /3 \* x \^ 2/],
+    [["limit", "--variable", "x", "--point", "0", "sin(x)\/x"], /= 1/],
+    [["integrate", "--variable", "x", "x^2"], /\+ C/],
     [["format", "(x + 1) * (x - 1)"], /\(x \+ 1\) \* \(x - 1\)/],
   ];
   for (const [args, expected] of cases) {
@@ -72,6 +75,9 @@ test("CLI help documents every public command and its important flags", () => {
     "polynomial",
     "nonlinear",
     "derive",
+    "differentiate",
+    "limit",
+    "integrate",
     "format",
     "latex",
     "capabilities",

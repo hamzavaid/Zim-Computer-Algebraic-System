@@ -9,7 +9,10 @@ type Operation =
   | "analyzePolynomial"
   | "solveRelation"
   | "solveNonlinearSystem"
-  | "derive";
+  | "derive"
+  | "differentiate"
+  | "limit"
+  | "integrate";
 declare const ZimResultPresenter: {
   presentResult: (
     operation: string,
@@ -38,6 +41,9 @@ const API_TO_GUI = Object.freeze({
   solveRelation: "Relation",
   solveNonlinearSystem: "Nonlinear System",
   derive: "Derivation",
+  differentiate: "Differentiate",
+  limit: "Limit",
+  integrate: "Integrate",
 });
 void API_TO_GUI;
 const byId = <T extends HTMLElement>(id: string): T => {
@@ -59,6 +65,13 @@ const maxResultantDegreeInput = byId<HTMLInputElement>("max-resultant-degree-inp
 const renderModeInput = byId<HTMLSelectElement>("render-mode-input");
 const localeInput = byId<HTMLInputElement>("locale-input");
 const maxDerivationNodesInput = byId<HTMLInputElement>("max-derivation-nodes-input");
+const maxSeriesTermsInput = byId<HTMLInputElement>("max-series-terms-input");
+const pointInput = byId<HTMLInputElement>("point-input");
+const directionInput = byId<HTMLSelectElement>("direction-input");
+const lowerInput = byId<HTMLInputElement>("lower-input");
+const upperInput = byId<HTMLInputElement>("upper-input");
+const integrationModeInput = byId<HTMLSelectElement>("integration-mode-input");
+const precisionDigitsInput = byId<HTMLInputElement>("precision-digits-input");
 const resultOutput = byId<HTMLOutputElement>("result-output");
 const mathOutput = byId<HTMLElement>("math-output");
 const latexOutput = byId<HTMLElement>("latex-output");
@@ -72,7 +85,19 @@ const rawRequestOutput = byId<HTMLTextAreaElement>("raw-request-output");
 const rawResponseOutput = byId<HTMLElement>("raw-response-output");
 const resultJsonOutput = byId<HTMLElement>("result-json-output");
 const showResultJson = byId<HTMLInputElement>("show-result-json");
-const optionFields = [variableInput, variablesInput, modeInput, initialGuessInput, renderModeInput];
+const optionFields = [
+  variableInput,
+  variablesInput,
+  modeInput,
+  initialGuessInput,
+  renderModeInput,
+  pointInput,
+  directionInput,
+  lowerInput,
+  upperInput,
+  integrationModeInput,
+  precisionDigitsInput,
+];
 const examples: Record<Operation, string> = {
   parse: "sqrt(x + 1) = x - 1",
   simplify: "1 * (2 + 3)",
@@ -85,6 +110,9 @@ const examples: Record<Operation, string> = {
   solveRelation: "5 <= x - 2",
   solveNonlinearSystem: "x * y = 2; x + y = 3",
   derive: "sqrt(x + 1) = x - 1",
+  differentiate: "x^3 + sin(x)",
+  limit: "sin(x) / x",
+  integrate: "x^2 + sin(x)",
 };
 function refreshOperation(): void {
   const operation = operationInput.value as Operation;
@@ -97,14 +125,22 @@ function refreshOperation(): void {
   for (const field of optionFields) {
     const visible =
       field === variableInput
-        ? ["solve", "solveRelation", "analyzePolynomial", "derive"].includes(operation)
+        ? ["solve", "solveRelation", "analyzePolynomial", "derive", "limit", "integrate"].includes(
+            operation,
+          )
         : field === variablesInput
-          ? ["solveSystem", "solveNonlinearSystem"].includes(operation)
+          ? ["solveSystem", "solveNonlinearSystem", "differentiate"].includes(operation)
           : field === modeInput
             ? operation === "solveNonlinearSystem"
             : field === initialGuessInput
               ? operation === "solveNonlinearSystem" && modeInput.value === "numeric"
-              : operation === "derive";
+              : field === renderModeInput
+                ? operation === "derive"
+                : field === pointInput || field === directionInput
+                  ? operation === "limit"
+                  : field === lowerInput || field === upperInput || field === integrationModeInput
+                    ? operation === "integrate"
+                    : operation === "integrate" && integrationModeInput.value === "numeric";
     field.hidden = !visible;
     const label = document.querySelector<HTMLLabelElement>(`label[for="${field.id}"]`);
     if (label) label.hidden = !visible;
@@ -378,6 +414,41 @@ function buildRequest(operation: Operation): Record<string, unknown> {
           ? undefined
           : { maxDerivationNodes: optionalNumber(maxDerivationNodesInput) },
     };
+  if (operation === "differentiate")
+    return {
+      ...base,
+      operation,
+      expression,
+      variables: variablesInput.value
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean),
+    };
+  if (operation === "limit")
+    return {
+      ...base,
+      operation,
+      expression,
+      variable: variableInput.value.trim() || "x",
+      point: pointInput.value.trim() || "0",
+      direction: directionInput.value,
+    };
+  if (operation === "integrate")
+    return {
+      ...base,
+      operation,
+      expression,
+      variable: variableInput.value.trim() || "x",
+      lower: lowerInput.value.trim() || undefined,
+      upper: upperInput.value.trim() || undefined,
+      integrationMode: integrationModeInput.value,
+      precisionDigits:
+        integrationModeInput.value === "numeric" ? optionalNumber(precisionDigitsInput) : undefined,
+      maxIterations:
+        integrationModeInput.value === "numeric" ? optionalNumber(maxIterationsInput) : undefined,
+      maxSeriesTerms:
+        integrationModeInput.value === "numeric" ? optionalNumber(maxSeriesTermsInput) : undefined,
+    };
   return {
     ...base,
     operation,
@@ -587,6 +658,7 @@ async function run(operation: Operation): Promise<void> {
 }
 operationInput.addEventListener("change", refreshOperation);
 modeInput.addEventListener("change", refreshOperation);
+integrationModeInput.addEventListener("change", refreshOperation);
 document
   .querySelectorAll<HTMLInputElement>('#settings-panel input[type="checkbox"]')
   .forEach((input) => input.addEventListener("change", refreshDeveloperPanels));

@@ -18,6 +18,9 @@ export const API_TO_CLI = Object.freeze({
   solveRelation: "solve/relation",
   solveNonlinearSystem: "nonlinear",
   derive: "derive",
+  differentiate: "differentiate",
+  limit: "limit",
+  integrate: "integrate",
 });
 const commandHelp: Readonly<Record<string, string>> = {
   parse: "zim parse [--json] <expression>",
@@ -31,6 +34,11 @@ const commandHelp: Readonly<Record<string, string>> = {
     "zim nonlinear --variables <name,...> [--mode exact|numeric] [--initial-guess x=1,y=2] [--max-iterations <n>] [--tolerance <number>] [--max-resultant-degree <n>] [--json] <equations>",
   derive:
     "zim derive --variable, -v <name> [--render-mode concise|classroom|diagnostic] [--locale <locale>] [--max-derivation-nodes <n>] [--json] <equation>",
+  differentiate: "zim differentiate --variables <name,...> [--json|--latex] <expression>",
+  limit:
+    "zim limit --variable, -v <name> --point <value|infinity> [--direction both|left|right] [--json|--latex] <expression>",
+  integrate:
+    "zim integrate --variable, -v <name> [--lower <value> --upper <value>] [--integration-mode symbolic|numeric] [--precision-digits <n>] [--max-iterations <n>] [--max-series-terms <n>] [--json|--latex] <expression>",
   format: "zim format <expression>",
   latex: "zim latex <expression-or-equation>",
   capabilities: "zim capabilities [--json]",
@@ -54,6 +62,13 @@ interface ParsedArguments {
   readonly renderMode?: "concise" | "classroom" | "diagnostic";
   readonly locale?: string;
   readonly maxDerivationNodes?: number;
+  readonly point?: string;
+  readonly direction?: "both" | "left" | "right";
+  readonly lower?: string;
+  readonly upper?: string;
+  readonly integrationMode?: "symbolic" | "numeric";
+  readonly precisionDigits?: number;
+  readonly maxSeriesTerms?: number;
   readonly help: boolean;
 }
 function positiveNumber(value: string | undefined, flag: string, integer = false): number {
@@ -86,6 +101,13 @@ function parseArguments(args: readonly string[]): ParsedArguments {
   let renderMode: "concise" | "classroom" | "diagnostic" | undefined,
     locale: string | undefined,
     maxDerivationNodes: number | undefined;
+  let point: string | undefined,
+    direction: "both" | "left" | "right" | undefined,
+    lower: string | undefined,
+    upper: string | undefined,
+    integrationMode: "symbolic" | "numeric" | undefined,
+    precisionDigits: number | undefined,
+    maxSeriesTerms: number | undefined;
   let trace = false,
     json = false,
     latex = false,
@@ -133,6 +155,29 @@ function parseArguments(args: readonly string[]): ParsedArguments {
       if (!locale) throw new Error("--locale requires a locale");
     } else if (argument === "--max-derivation-nodes")
       maxDerivationNodes = positiveNumber(args[++index], argument, true);
+    else if (argument === "--point") {
+      point = args[++index];
+      if (!point) throw new Error("--point requires a value");
+    } else if (argument === "--direction") {
+      const value = args[++index];
+      if (value !== "both" && value !== "left" && value !== "right")
+        throw new Error("--direction must be both, left, or right");
+      direction = value;
+    } else if (argument === "--lower") {
+      lower = args[++index];
+      if (!lower) throw new Error("--lower requires a value");
+    } else if (argument === "--upper") {
+      upper = args[++index];
+      if (!upper) throw new Error("--upper requires a value");
+    } else if (argument === "--integration-mode") {
+      const value = args[++index];
+      if (value !== "symbolic" && value !== "numeric")
+        throw new Error("--integration-mode must be symbolic or numeric");
+      integrationMode = value;
+    } else if (argument === "--precision-digits")
+      precisionDigits = positiveNumber(args[++index], argument, true);
+    else if (argument === "--max-series-terms")
+      maxSeriesTerms = positiveNumber(args[++index], argument, true);
     else if (/^--[A-Za-z]/u.test(argument)) throw new Error(`Unknown option '${argument}'`);
     else expressionParts.push(argument);
   }
@@ -153,6 +198,13 @@ function parseArguments(args: readonly string[]): ParsedArguments {
     renderMode,
     locale,
     maxDerivationNodes,
+    point,
+    direction,
+    lower,
+    upper,
+    integrationMode,
+    precisionDigits,
+    maxSeriesTerms,
     help,
   };
 }
@@ -331,6 +383,40 @@ function requestFor(options: ParsedArguments): ApiV2Request {
               ? undefined
               : { maxDerivationNodes: options.maxDerivationNodes },
         };
+    case "differentiate":
+      if (!options.variables?.length)
+        throw new Error("The differentiate command requires --variables <name,...>");
+      return {
+        ...base,
+        operation: "differentiate",
+        expression: options.expression,
+        variables: options.variables,
+      };
+    case "limit":
+      if (!options.variable) throw new Error("The limit command requires --variable <name>");
+      if (!options.point) throw new Error("The limit command requires --point <value>");
+      return {
+        ...base,
+        operation: "limit",
+        expression: options.expression,
+        variable: options.variable,
+        point: options.point,
+        direction: options.direction,
+      };
+    case "integrate":
+      if (!options.variable) throw new Error("The integrate command requires --variable <name>");
+      return {
+        ...base,
+        operation: "integrate",
+        expression: options.expression,
+        variable: options.variable,
+        lower: options.lower,
+        upper: options.upper,
+        integrationMode: options.integrationMode,
+        precisionDigits: options.precisionDigits,
+        maxIterations: options.maxIterations,
+        maxSeriesTerms: options.maxSeriesTerms,
+      };
     default:
       throw new Error(`Unknown command '${options.command}'.\n${usage}`);
   }

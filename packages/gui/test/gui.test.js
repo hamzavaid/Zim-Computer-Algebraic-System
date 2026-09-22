@@ -129,7 +129,7 @@ test("API v2 HTTP transport preserves the public response envelope", async () =>
   assert.equal(payload.apiVersion, "2.0-beta");
   assert.equal(payload.requestId, "gui-test");
   assert.equal(payload.status, "ok");
-  assert.equal(payload.result.release, "2.4.6");
+  assert.equal(payload.result.release, "2.5.0");
   assert.equal(typeof payload.timing.totalMs, "number");
 });
 
