@@ -53,3 +53,45 @@ export type LimitResult =
 export interface LimitOptions extends CalculusBudget {
   readonly direction?: LimitDirection;
 }
+
+export interface IntegrationRuleDescriptor {
+  readonly id: string;
+  readonly family: "linearity" | "power" | "elementary-function";
+  readonly description: string;
+}
+
+export interface IntegrationOptions extends CalculusBudget {
+  readonly lower?: Expression;
+  readonly upper?: Expression;
+  readonly constantName?: string;
+}
+
+export type IntegrationResult =
+  | {
+      readonly kind: "complete";
+      readonly expression: Expression;
+      readonly antiderivative: Expression;
+      readonly variable: string;
+      readonly constant: string;
+      readonly exact: true;
+      readonly verified: true;
+      readonly conditions: readonly string[];
+    }
+  | {
+      readonly kind: "definite";
+      readonly value: Expression;
+      readonly variable: string;
+      readonly lower: Expression;
+      readonly upper: Expression;
+      readonly exact: true;
+      readonly verified: true;
+      readonly method: "symbolic-antiderivative";
+    }
+  | {
+      readonly kind: "unevaluated";
+      readonly integrand: Expression;
+      readonly variable: string;
+      readonly reason: string;
+    }
+  | { readonly kind: "unsupported"; readonly reason: string }
+  | { readonly kind: "incomplete"; readonly reason: "node-budget-exceeded" };
