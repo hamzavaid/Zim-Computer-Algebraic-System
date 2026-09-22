@@ -1,5 +1,11 @@
 # Release notes
 
+## v2.4.6 — Readable GUI results
+
+- Adds a dedicated presenter for nonlinear-system and polynomial-analysis responses, with readable solutions, root summaries, multiplicities, and solver-state boundaries.
+- Keeps the pretty answer as the default and adds a Settings option to show result JSON alongside it.
+- Retains the separate developer inspection panel for full API request and response envelopes.
+
 ## v2.4.5 — CLI and GUI feature parity
 
 - Exposes all current API-v2 operations through documented CLI commands and help.

@@ -1,4 +1,4 @@
-# Zim 2.4.5 Computer Algebraic System
+# Zim 2.4.6 Computer Algebraic System
 
 Zim 2.0 is a TypeScript symbolic-mathematics engine with strict parsing, exact rational arithmetic, deterministic simplification, polynomial and rational-equation solving, selected symbolic transcendental solving, exact linear systems, a versioned backend API, and a command-line interface.
 
@@ -25,6 +25,8 @@ npm run start:gui
 ```
 
 Then open `http://127.0.0.1:3210`. The interface communicates exclusively through the serialized public API and renders returned AST values with native MathML.
+
+The GUI presents API results in a readable format by default. In Settings, enable **Show result JSON** to display the underlying result data alongside the formatted answer. The separate API developer inspection panel can also be enabled there for full request and response envelopes.
 
 ## Current API
 

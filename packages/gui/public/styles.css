@@ -39,6 +39,9 @@
 * {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 
 body {
   margin: 0;
@@ -104,6 +107,45 @@ a:focus-visible {
   justify-content: space-between;
   padding: 2rem 0 1.25rem;
 }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.settings-panel {
+  position: relative;
+  z-index: 5;
+}
+.settings-panel > summary {
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.settings-content {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: min(22rem, 90vw);
+  max-height: 75vh;
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.settings-content label {
+  margin-top: 0.7rem;
+}
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.checkbox-option input {
+  width: auto;
+}
 
 h1,
 h2,
@@ -149,7 +191,8 @@ h2 {
 }
 
 .editor,
-.result {
+.result,
+.raw-panel {
   grid-column: 1;
 }
 
@@ -202,7 +245,7 @@ select {
 
 .solve-options {
   display: grid;
-  grid-template-columns: auto minmax(5rem, 0.5fr) auto minmax(7rem, 0.7fr);
+  grid-template-columns: minmax(8rem, 12rem) minmax(10rem, 1fr);
   margin: 1rem 0;
 }
 
@@ -258,11 +301,28 @@ button.quiet {
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(1.35rem, 3vw, 2.1rem);
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .math-result math {
   max-width: 100%;
   overflow-x: auto;
+}
+.math-result.long-result {
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+.math-result.long-result math {
+  display: block;
+  max-height: none;
+  overflow: visible;
+}
+.result-prose {
+  margin: 0;
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .accessible-result {
@@ -305,7 +365,18 @@ button.quiet {
 }
 
 .history li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.65rem;
+  list-style: none;
+}
+.history ul {
+  padding: 0;
+}
+.history .section-heading {
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+.history .section-heading h2 {
+  margin-bottom: 0;
 }
 
 .history button {
@@ -316,6 +387,10 @@ button.quiet {
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  background: var(--surface-strong);
 }
 
 .tree-output {
@@ -341,6 +416,7 @@ summary {
 
   .editor,
   .result,
+  .raw-panel,
   .history,
   .steps,
   .tree-panel {

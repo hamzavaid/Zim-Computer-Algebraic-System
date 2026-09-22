@@ -10,6 +10,13 @@ type Operation =
   | "solveRelation"
   | "solveNonlinearSystem"
   | "derive";
+declare const ZimResultPresenter: {
+  presentResult: (
+    operation: string,
+    result: unknown,
+    variables: readonly string[],
+  ) => { text: string } | undefined;
+};
 interface ApiV2Payload {
   readonly apiVersion: string;
   readonly requestId: string;
@@ -40,6 +47,7 @@ const byId = <T extends HTMLElement>(id: string): T => {
 };
 const expressionInput = byId<HTMLTextAreaElement>("expression-input");
 const operationInput = byId<HTMLSelectElement>("operation-input");
+const operationExample = byId<HTMLElement>("operation-example");
 const variableInput = byId<HTMLInputElement>("variable-input");
 const variablesInput = byId<HTMLInputElement>("variables-input");
 const domainInput = byId<HTMLSelectElement>("domain-input");
@@ -62,8 +70,60 @@ const statusOutput = byId<HTMLElement>("status-output");
 const cancelButton = byId<HTMLButtonElement>("cancel-button");
 const rawRequestOutput = byId<HTMLTextAreaElement>("raw-request-output");
 const rawResponseOutput = byId<HTMLElement>("raw-response-output");
+const resultJsonOutput = byId<HTMLElement>("result-json-output");
+const showResultJson = byId<HTMLInputElement>("show-result-json");
+const optionFields = [variableInput, variablesInput, modeInput, initialGuessInput, renderModeInput];
+const examples: Record<Operation, string> = {
+  parse: "sqrt(x + 1) = x - 1",
+  simplify: "1 * (2 + 3)",
+  solve: "x^2 = 4",
+  solveSystem: "x + y = 5; x - y = 1",
+  format: "(x + 1) * (x - 1)",
+  latex: "x^2 = 4",
+  capabilities: "No expression needed",
+  analyzePolynomial: "x^3 - 2",
+  solveRelation: "5 <= x - 2",
+  solveNonlinearSystem: "x * y = 2; x + y = 3",
+  derive: "sqrt(x + 1) = x - 1",
+};
+function refreshOperation(): void {
+  const operation = operationInput.value as Operation;
+  expressionInput.placeholder =
+    operation === "capabilities" ? "No expression needed" : `Try: ${examples[operation]}`;
+  operationExample.textContent = `Example: ${examples[operation]}`;
+  expressionInput.hidden = operation === "capabilities";
+  const expressionLabel = document.querySelector<HTMLLabelElement>('label[for="expression-input"]');
+  if (expressionLabel) expressionLabel.hidden = operation === "capabilities";
+  for (const field of optionFields) {
+    const visible =
+      field === variableInput
+        ? ["solve", "solveRelation", "analyzePolynomial", "derive"].includes(operation)
+        : field === variablesInput
+          ? ["solveSystem", "solveNonlinearSystem"].includes(operation)
+          : field === modeInput
+            ? operation === "solveNonlinearSystem"
+            : field === initialGuessInput
+              ? operation === "solveNonlinearSystem" && modeInput.value === "numeric"
+              : operation === "derive";
+    field.hidden = !visible;
+    const label = document.querySelector<HTMLLabelElement>(`label[for="${field.id}"]`);
+    if (label) label.hidden = !visible;
+  }
+}
+function refreshDeveloperPanels(): void {
+  for (const [checkbox, panel] of [
+    ["show-api-panel", ".raw-panel"],
+    ["show-steps-panel", ".steps"],
+    ["show-tree-panel", ".tree-panel"],
+  ] as const) {
+    const input = byId<HTMLInputElement>(checkbox);
+    const section = document.querySelector<HTMLElement>(panel);
+    if (section) section.hidden = !input.checked;
+  }
+}
 let activeRequest: AbortController | undefined,
   lastPayload: ApiV2Payload | undefined,
+  lastRequest: Record<string, unknown> | undefined,
   lastText = "",
   lastLatex = "",
   requestSequence = 0;
@@ -100,7 +160,23 @@ function serializedExpression(value: unknown): MathMLElement {
     row.append(mathElement("mo", String(item.operator)), serializedExpression(item.operand));
     return row;
   }
-  return mathElement("mtext", "Result");
+  if (item.kind === "function") {
+    const args = Array.isArray(item.args) ? item.args : [];
+    if (item.name === "sqrt" && args.length === 1) {
+      const root = mathElement("msqrt");
+      root.append(serializedExpression(args[0]));
+      return root;
+    }
+    const row = mathElement("mrow");
+    row.append(mathElement("mi", String(item.name)), mathElement("mo", "("));
+    args.forEach((argument, index) => {
+      if (index) row.append(mathElement("mo", ","));
+      row.append(serializedExpression(argument));
+    });
+    row.append(mathElement("mo", ")"));
+    return row;
+  }
+  return mathElement("mtext", expressionInput.value.trim());
 }
 interface StoredHistory {
   readonly version: 1;
@@ -136,7 +212,10 @@ function renderHistory(): void {
     button.textContent = entry.expression;
     button.addEventListener("click", () => {
       expressionInput.value = entry.expression;
-      if (entry.operation) operationInput.value = entry.operation;
+      if (entry.operation) {
+        operationInput.value = entry.operation;
+        refreshOperation();
+      }
     });
     const item = document.createElement("li");
     item.append(button);
@@ -313,9 +392,73 @@ function buildRequest(operation: Operation): Record<string, unknown> {
     ...(operation === "simplify" ? { includeSteps: true } : {}),
   };
 }
+function expressionText(value: unknown): string {
+  if (value === "-infinity") return "−∞";
+  if (value === "infinity") return "∞";
+  if (!value || typeof value !== "object") return String(value);
+  const expression = value as Record<string, unknown>;
+  if (expression.kind === "constant") return String(expression.value);
+  if (expression.kind === "rational") return `${expression.numerator}/${expression.denominator}`;
+  if (expression.kind === "variable") return String(expression.name);
+  return JSON.stringify(value);
+}
+function solutionText(value: unknown, variable: string): string {
+  if (!value || typeof value !== "object") return String(value);
+  const set = value as Record<string, unknown>;
+  if (set.kind === "empty") return "∅";
+  if (set.kind === "universal") return `${variable} ∈ ${String(set.domain)}`;
+  if (set.kind === "finite")
+    return `${variable} ∈ {${(set.values as unknown[]).map(expressionText).join(", ")}}`;
+  if (set.kind === "interval") {
+    const lower =
+      set.lower === "-infinity"
+        ? ""
+        : `${expressionText(set.lower)} ${set.lowerInclusive ? "≤" : "<"} `;
+    const upper =
+      set.upper === "infinity"
+        ? ""
+        : ` ${set.upperInclusive ? "≤" : "<"} ${expressionText(set.upper)}`;
+    return `${lower}${variable}${upper}`;
+  }
+  if (set.kind === "union")
+    return (set.sets as unknown[]).map((part) => solutionText(part, variable)).join(" ∪ ");
+  if (set.kind === "conditional")
+    return `${solutionText(set.set, variable)} if ${(set.conditions as string[]).join(" and ")}`;
+  if (set.kind === "parameterized")
+    return `${expressionText(set.expression)}, ${String(set.parameter)} ∈ ℤ`;
+  return JSON.stringify(value);
+}
 function resultText(result: unknown): string {
   if (!result || typeof result !== "object") return String(result);
   const item = result as Record<string, unknown>;
+  const operation = String(lastRequest?.operation ?? "");
+  const variables = Array.isArray(lastRequest?.variables)
+    ? lastRequest.variables.filter((value): value is string => typeof value === "string")
+    : [];
+  const pretty = ZimResultPresenter.presentResult(operation, result, variables);
+  if (pretty) return pretty.text;
+  if (lastRequest?.operation === "capabilities") {
+    const limits = item.limits as Record<string, number>;
+    const experimental = item.experimental as Record<string, boolean>;
+    return [
+      `Release ${item.release}`,
+      `API versions: ${(item.apiVersions as string[]).join(", ")}`,
+      `Operations: ${(item.operations as string[]).join(", ")}`,
+      `Solver families: ${(item.solverFamilies as string[]).join(", ")}`,
+      `Domains: ${(item.domains as string[]).join(", ")}`,
+      `Limits: ${Object.entries(limits)
+        .map(([name, value]) => `${name} ${value}`)
+        .join(", ")}`,
+      `Experimental: ${
+        Object.entries(experimental)
+          .filter(([, enabled]) => enabled)
+          .map(([name]) => name)
+          .join(", ") || "none"
+      }`,
+    ].join("\n");
+  }
+  if (item.solution && lastRequest?.operation === "solveRelation")
+    return solutionText(item.solution, String(lastRequest.variable ?? "x"));
   if (typeof item.text === "string") return item.text;
   if (typeof item.latex === "string" && Object.keys(item).length === 1) return item.latex;
   if (
@@ -333,24 +476,49 @@ function showPayload(payload: ApiV2Payload): void {
   if (payload.status !== "ok") {
     errorOutput.textContent = `${payload.error?.code ?? payload.status}: ${payload.error?.message ?? "Operation did not complete"}`;
     errorOutput.hidden = false;
+    lastText = "";
+    lastLatex = "";
+    resultOutput.textContent = "";
+    mathOutput.replaceChildren();
+    latexOutput.textContent = "";
+    stepsOutput.replaceChildren();
+    treeOutput.replaceChildren();
+    resultJsonOutput.textContent = "";
+    resultJsonOutput.hidden = true;
     return;
   }
   errorOutput.hidden = true;
   lastText = resultText(payload.result);
   resultOutput.textContent = lastText;
+  resultJsonOutput.textContent = JSON.stringify(payload.result, null, 2);
+  resultJsonOutput.hidden = !showResultJson.checked;
   const result = payload.result as Record<string, unknown> | undefined;
   lastLatex = typeof result?.latex === "string" ? result.latex : "";
   latexOutput.textContent = lastLatex || "No LaTeX output for this operation.";
-  const math = mathElement("math");
-  math.setAttribute("display", "block");
-  math.append(result?.ast ? serializedExpression(result.ast) : mathElement("mtext", "Result"));
-  mathOutput.replaceChildren(math);
+  const longResult = lastText.length > 120 || lastText.includes("\n");
+  mathOutput.classList.toggle("long-result", longResult);
+  if (longResult) {
+    const prose = document.createElement("pre");
+    prose.className = "result-prose";
+    prose.textContent = lastText;
+    mathOutput.replaceChildren(prose);
+  } else {
+    const math = mathElement("math");
+    math.setAttribute("display", "block");
+    math.append(
+      result?.ast && lastRequest?.operation === "parse"
+        ? serializedExpression(result.ast)
+        : mathElement("mtext", lastText),
+    );
+    mathOutput.replaceChildren(math);
+  }
   if (result?.graph) renderDerivationGraph(result.graph);
   else if (result?.derivation) renderDerivationGraph(result.derivation);
   else if (result) renderSteps(result.steps);
   renderTree(payload.result);
 }
 async function submit(request: Record<string, unknown>): Promise<void> {
+  lastRequest = request;
   activeRequest?.abort();
   const controller = new AbortController();
   activeRequest = controller;
@@ -367,6 +535,28 @@ async function submit(request: Record<string, unknown>): Promise<void> {
     });
     const payload = (await response.json()) as ApiV2Payload;
     if (sequence === requestSequence) showPayload(payload);
+    if (sequence === requestSequence && payload.status === "ok" && !lastLatex) {
+      const expression =
+        typeof request.expression === "string"
+          ? request.expression
+          : typeof request.relation === "string"
+            ? request.relation
+            : undefined;
+      if (expression) {
+        const latexResponse = await fetch("/api/v2", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ apiVersion: "2.0-beta", operation: "latex", expression }),
+          signal: controller.signal,
+        });
+        const latexPayload = (await latexResponse.json()) as ApiV2Payload;
+        const latex = (latexPayload.result as Record<string, unknown> | undefined)?.latex;
+        if (sequence === requestSequence && typeof latex === "string") {
+          lastLatex = latex;
+          latexOutput.textContent = latex;
+        }
+      }
+    }
   } catch (caught) {
     if (caught instanceof DOMException && caught.name === "AbortError")
       statusOutput.textContent = "Cancelled";
@@ -395,11 +585,14 @@ async function run(operation: Operation): Promise<void> {
     errorOutput.hidden = false;
   }
 }
+operationInput.addEventListener("change", refreshOperation);
+modeInput.addEventListener("change", refreshOperation);
 document
-  .querySelectorAll<HTMLButtonElement>("[data-operation]")
-  .forEach((button) =>
-    button.addEventListener("click", () => void run(button.dataset.operation as Operation)),
-  );
+  .querySelectorAll<HTMLInputElement>('#settings-panel input[type="checkbox"]')
+  .forEach((input) => input.addEventListener("change", refreshDeveloperPanels));
+showResultJson.addEventListener("change", () => {
+  resultJsonOutput.hidden = !showResultJson.checked || !lastPayload?.result;
+});
 byId<HTMLButtonElement>("run-button").addEventListener(
   "click",
   () => void run(operationInput.value as Operation),
@@ -419,6 +612,8 @@ byId<HTMLButtonElement>("clear-button").addEventListener("click", () => {
   mathOutput.replaceChildren();
   latexOutput.textContent = "";
   rawResponseOutput.textContent = "";
+  resultJsonOutput.textContent = "";
+  resultJsonOutput.hidden = true;
   errorOutput.hidden = true;
   stepsOutput.replaceChildren();
   treeOutput.replaceChildren();
@@ -438,8 +633,8 @@ document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) =>
         ? lastText
         : button.dataset.copy === "latex"
           ? lastLatex
-          : lastPayload
-            ? JSON.stringify(lastPayload, null, 2)
+          : lastPayload?.result
+            ? JSON.stringify(lastPayload.result, null, 2)
             : "";
     if (value) void navigator.clipboard.writeText(value);
   }),
@@ -460,3 +655,5 @@ rawRequestOutput.value = JSON.stringify(
   2,
 );
 renderHistory();
+refreshOperation();
+refreshDeveloperPanels();

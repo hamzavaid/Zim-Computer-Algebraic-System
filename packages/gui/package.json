@@ -1,6 +1,6 @@
 {
   "name": "@zim/gui",
-  "version": "2.4.5",
+  "version": "2.4.6",
   "private": true,
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
@@ -12,6 +12,6 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@zim/core": "2.4.5"
+    "@zim/core": "2.4.6"
   }
 }

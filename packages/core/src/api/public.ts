@@ -52,7 +52,7 @@ export function solveWithSteps(tree: SyntaxTree, options: SolveOptions): Detaile
 export function formatSolveResult(result: SolveResult): string {
   switch (result.kind) {
     case "solution":
-      return `${result.variable} = ${format(result.value)}`;
+      return `${result.variable} = ${format(result.value)}${result.conditions?.length ? `, where ${result.conditions.join(" and ")}` : ""}`;
     case "multiple-solutions":
       return `${result.variable} = ${result.values.map(format).join(", ")}`;
     case "identity":
@@ -65,7 +65,8 @@ export function formatSolveResult(result: SolveResult): string {
 }
 
 export function latexSolveResult(result: SolveResult): string {
-  if (result.kind === "solution") return `${result.variable} = ${toLatex(result.value)}`;
+  if (result.kind === "solution")
+    return `${result.variable} = ${toLatex(result.value)}${result.conditions?.length ? `,\\quad ${result.conditions.join(" and ").replaceAll("!=", "\\ne")}` : ""}`;
   if (result.kind === "multiple-solutions") {
     return `${result.variable} \\in \\left\\{${result.values.map(toLatex).join(", ")}\\right\\}`;
   }

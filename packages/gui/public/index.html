@@ -4,8 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Zim exact symbolic mathematics interface" />
-    <title>Zim 2.4.5</title>
+    <title>Zim 2.4.6</title>
     <link rel="stylesheet" href="/styles.css" />
+    <script src="/resultPresenter.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
   <body>
@@ -13,11 +14,45 @@
     <header class="site-header">
       <div>
         <p class="eyebrow">Symbolic mathematics workspace</p>
-        <h1>Zim 2.4.5</h1>
+        <h1>Zim 2.4.6</h1>
       </div>
-      <button id="theme-toggle" class="secondary" type="button" aria-pressed="false">
-        Toggle theme
-      </button>
+      <div class="header-actions">
+        <details id="settings-panel" class="settings-panel">
+          <summary>Settings</summary>
+          <div class="settings-content">
+            <label for="domain-input">Domain</label>
+            <select id="domain-input">
+              <option value="real">Real</option>
+              <option value="complex">Complex</option>
+            </select>
+            <label for="locale-input">Locale</label>
+            <input id="locale-input" value="en" autocomplete="off" />
+            <label for="max-iterations-input">Max iterations</label>
+            <input id="max-iterations-input" type="number" min="1" placeholder="100" />
+            <label for="tolerance-input">Tolerance</label>
+            <input id="tolerance-input" type="number" min="0" step="any" placeholder="1e-10" />
+            <label for="max-resultant-degree-input">Max resultant degree</label>
+            <input id="max-resultant-degree-input" type="number" min="1" placeholder="8" />
+            <label for="max-derivation-nodes-input">Max derivation nodes</label>
+            <input id="max-derivation-nodes-input" type="number" min="1" placeholder="2000" />
+            <label class="checkbox-option"
+              ><input id="show-api-panel" type="checkbox" /> API developer inspection</label
+            >
+            <label class="checkbox-option"
+              ><input id="show-steps-panel" type="checkbox" /> Backend trace</label
+            >
+            <label class="checkbox-option"
+              ><input id="show-tree-panel" type="checkbox" /> Structure</label
+            >
+            <label class="checkbox-option"
+              ><input id="show-result-json" type="checkbox" /> Show result JSON</label
+            >
+          </div>
+        </details>
+        <button id="theme-toggle" class="secondary" type="button" aria-pressed="false">
+          Toggle theme
+        </button>
+      </div>
     </header>
 
     <main id="workspace" class="workspace">
@@ -51,17 +86,13 @@
           spellcheck="false"
           placeholder="Try: x^2 + 1 = 0"
         ></textarea>
+        <p id="operation-example" class="hint">Example: x^2 = 4</p>
         <p class="hint">
           Use explicit multiplication, such as <code>2*x</code>. Ctrl/⌘ + Enter solves.
         </p>
         <div class="solve-options">
           <label for="variable-input">Solve for</label>
           <input id="variable-input" value="x" autocomplete="off" />
-          <label for="domain-input">Domain</label>
-          <select id="domain-input">
-            <option value="real">Real</option>
-            <option value="complex">Complex</option>
-          </select>
           <label for="variables-input">Variables</label>
           <input id="variables-input" value="x,y" autocomplete="off" />
           <label for="mode-input">Mode</label>
@@ -71,42 +102,19 @@
           </select>
           <label for="initial-guess-input">Initial guess</label>
           <input id="initial-guess-input" placeholder="x=1,y=2" autocomplete="off" />
-          <label for="max-iterations-input">Max iterations</label>
-          <input id="max-iterations-input" type="number" min="1" placeholder="100" />
-          <label for="tolerance-input">Tolerance</label>
-          <input id="tolerance-input" type="number" min="0" step="any" placeholder="1e-10" />
-          <label for="max-resultant-degree-input">Max resultant degree</label>
-          <input id="max-resultant-degree-input" type="number" min="1" placeholder="8" />
           <label for="render-mode-input">Render mode</label>
           <select id="render-mode-input">
             <option value="concise">Concise</option>
             <option value="classroom" selected>Classroom</option>
             <option value="diagnostic">Diagnostic</option>
           </select>
-          <label for="locale-input">Locale</label>
-          <input id="locale-input" value="en" autocomplete="off" />
-          <label for="max-derivation-nodes-input">Max derivation nodes</label>
-          <input id="max-derivation-nodes-input" type="number" min="1" placeholder="2000" />
         </div>
         <div class="actions" aria-label="Expression actions">
-          <button type="button" data-operation="simplify">Simplify</button>
-          <button type="button" data-operation="solve">Solve</button>
-          <button type="button" data-operation="parse" class="secondary">Parse tree</button>
-          <button type="button" id="run-button">Run selected operation</button>
+          <button type="button" id="run-button">Run Operation</button>
           <button type="button" id="cancel-button" class="secondary" disabled>Cancel</button>
           <button type="button" id="clear-button" class="quiet">Clear</button>
         </div>
         <p id="error-output" class="error" role="alert" hidden></p>
-      </section>
-
-      <section class="card raw-panel" aria-labelledby="raw-heading">
-        <p class="eyebrow">API v2 developer inspection</p>
-        <h2 id="raw-heading">Raw request and response</h2>
-        <label for="raw-request-output">Request JSON</label>
-        <textarea id="raw-request-output" rows="8" spellcheck="false"></textarea>
-        <button type="button" id="run-raw-button" class="secondary">Submit raw API request</button>
-        <label for="raw-response-output">Response JSON</label>
-        <pre id="raw-response-output" class="code-output"></pre>
       </section>
 
       <section class="card result" aria-labelledby="result-heading">
@@ -123,28 +131,41 @@
         </div>
         <div id="math-output" class="math-result" aria-hidden="true"></div>
         <output id="result-output" class="accessible-result" aria-live="polite"></output>
+        <pre id="result-json-output" class="code-output" hidden></pre>
         <details>
           <summary>LaTeX source</summary>
           <pre id="latex-output" class="code-output"></pre>
         </details>
       </section>
 
-      <section class="card steps" aria-labelledby="steps-heading">
+      <section class="card raw-panel" aria-labelledby="raw-heading" hidden>
+        <p class="eyebrow">API v2 developer inspection</p>
+        <h2 id="raw-heading">Raw request and response</h2>
+        <label for="raw-request-output">Request JSON</label>
+        <textarea id="raw-request-output" rows="8" spellcheck="false"></textarea>
+        <button type="button" id="run-raw-button" class="secondary">Submit raw API request</button>
+        <label for="raw-response-output">Response JSON</label>
+        <pre id="raw-response-output" class="code-output"></pre>
+      </section>
+
+      <section class="card steps" aria-labelledby="steps-heading" hidden>
         <p class="eyebrow">Backend trace</p>
         <h2 id="steps-heading">Step by step</h2>
         <ol id="steps-output" class="steps-list"></ol>
       </section>
 
-      <section class="card tree-panel" aria-labelledby="tree-heading">
+      <section class="card tree-panel" aria-labelledby="tree-heading" hidden>
         <p class="eyebrow">Structure</p>
         <h2 id="tree-heading">Expression tree</h2>
         <div id="tree-output" class="tree-output"></div>
       </section>
 
       <aside class="card history" aria-labelledby="history-heading">
-        <p class="eyebrow">Recent work</p>
         <div class="section-heading">
-          <h2 id="history-heading">History</h2>
+          <div>
+            <p class="eyebrow">Recent work</p>
+            <h2 id="history-heading">History</h2>
+          </div>
           <button type="button" id="clear-history-button" class="quiet">Clear history</button>
         </div>
         <ul id="history-output"></ul>

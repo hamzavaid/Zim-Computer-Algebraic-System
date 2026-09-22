@@ -50,7 +50,7 @@ test("v2 parity commands expose human and JSON output", () => {
       ["derive", "--variable", "x", "--render-mode", "classroom", "sqrt(x + 1) = x - 1"],
       /Verified result/i,
     ],
-    [["capabilities"], /2\.4\.5/],
+    [["capabilities"], /2\.4\.6/],
     [["format", "(x + 1) * (x - 1)"], /\(x \+ 1\) \* \(x - 1\)/],
   ];
   for (const [args, expected] of cases) {

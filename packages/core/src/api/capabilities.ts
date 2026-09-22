@@ -7,7 +7,7 @@ export interface CapabilityLimits {
 }
 
 export interface CapabilityRegistry {
-  readonly release: "2.4.5";
+  readonly release: "2.4.6";
   readonly apiVersions: readonly ["1.0", "2.0-beta"];
   readonly operations: readonly string[];
   readonly solverFamilies: readonly string[];
@@ -17,7 +17,7 @@ export interface CapabilityRegistry {
 }
 
 const registry: CapabilityRegistry = Object.freeze({
-  release: "2.4.5",
+  release: "2.4.6",
   apiVersions: ["1.0", "2.0-beta"] as const,
   operations: [
     "parse",

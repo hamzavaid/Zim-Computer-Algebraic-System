@@ -1,5 +1,7 @@
 import { coefficientMap, degree, subtractPolynomials } from "../algebra/polynomial";
-import { SyntaxTree } from "../ast/types";
+import { binary, Expression, SyntaxTree } from "../ast/types";
+import { containsVariable } from "../visitors/containsVariable";
+import { format } from "../format/formatter";
 import { solveLinearEquation } from "./linearSolver";
 import { solveQuadraticEquation } from "./quadraticSolver";
 import { solvePolynomial } from "./polynomialSolver";
@@ -19,6 +21,8 @@ function solveAlgebraicEquation(
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/u.test(variableName)) {
     return { kind: "unsupported", reason: `Invalid variable name '${variableName}'` };
   }
+  const symbolic = solveSymbolicProduct(tree, variableName);
+  if (symbolic) return symbolic;
   if (
     containsVariableDenominator(tree.left, variableName) ||
     containsVariableDenominator(tree.right, variableName)
@@ -37,6 +41,44 @@ function solveAlgebraicEquation(
     variableName,
     domain,
   );
+}
+
+function solveSymbolicProduct(tree: SyntaxTree, variableName: string): SolveResult | undefined {
+  if (tree.kind !== "equation") return undefined;
+  const sides: readonly [Expression, Expression][] = [
+    [tree.left, tree.right],
+    [tree.right, tree.left],
+  ];
+  for (const [product, numerator] of sides) {
+    if (
+      product.kind !== "binary" ||
+      product.operator !== "*" ||
+      containsVariable(numerator, variableName)
+    )
+      continue;
+    if (numerator.kind !== "constant" || numerator.value === 0n) continue;
+    const factors: readonly [Expression, Expression][] = [
+      [product.left, product.right],
+      [product.right, product.left],
+    ];
+    for (const [target, coefficient] of factors) {
+      if (
+        target.kind !== "variable" ||
+        target.name !== variableName ||
+        containsVariable(coefficient, variableName)
+      )
+        continue;
+      if (coefficient.kind !== "variable") continue;
+      return {
+        kind: "solution",
+        variable: variableName,
+        value: binary("/", numerator, coefficient),
+        verified: true,
+        conditions: [`${format(coefficient)} != 0`],
+      };
+    }
+  }
+  return undefined;
 }
 
 export function solveFor(

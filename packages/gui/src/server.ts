@@ -79,6 +79,14 @@ async function handle(request: IncomingMessage, response: ServerResponse): Promi
       await sendFile(response, browserScript, "text/javascript; charset=utf-8");
       return;
     }
+    if (requestUrl.pathname === "/resultPresenter.js") {
+      await sendFile(
+        response,
+        path.join(publicDirectory, "resultPresenter.js"),
+        "text/javascript; charset=utf-8",
+      );
+      return;
+    }
   }
   if (
     request.method === "POST" &&

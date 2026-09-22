@@ -85,6 +85,7 @@ export type SerializedSolveResult =
       readonly variable: string;
       readonly value: SerializedExpression;
       readonly verified: true;
+      readonly conditions?: readonly string[];
     }
   | {
       readonly kind: "multiple-solutions";

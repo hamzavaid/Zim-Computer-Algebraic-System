@@ -6,6 +6,7 @@ export type SolveResult =
       readonly variable: string;
       readonly value: Expression;
       readonly verified: true;
+      readonly conditions?: readonly string[];
     }
   | {
       readonly kind: "multiple-solutions";

@@ -129,7 +129,7 @@ test("API v2 HTTP transport preserves the public response envelope", async () =>
   assert.equal(payload.apiVersion, "2.0-beta");
   assert.equal(payload.requestId, "gui-test");
   assert.equal(payload.status, "ok");
-  assert.equal(payload.result.release, "2.4.5");
+  assert.equal(payload.result.release, "2.4.6");
   assert.equal(typeof payload.timing.totalMs, "number");
 });
 
@@ -150,6 +150,17 @@ test("GUI explicitly exposes every API v2 operation", () => {
   for (const operation of operations) assert.match(html, new RegExp(`value=["']${operation}["']`));
   assert.match(html, /id=["']raw-request-output["']/);
   assert.match(html, /id=["']raw-response-output["']/);
+});
+
+test("GUI serves the result presenter before the browser application", async () => {
+  assert.ok(html.indexOf("/resultPresenter.js") < html.indexOf("/app.js"));
+  const response = await fetch(`${endpoint}/resultPresenter.js`);
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /presentResult/);
+});
+
+test("result card precedes developer inspection in document order", () => {
+  assert.ok(html.indexOf('class="card result"') < html.indexOf('class="card raw-panel"'));
 });
 
 test("GUI and core packages remain independently versionable", () => {
