@@ -147,6 +147,8 @@ Command options:
 
 Use `zim --help` or `zim <command> --help` for terminal help. Human-readable text is the default; `--json` returns the complete API-v2 envelope. The `solve` command automatically routes inequalities to the relation solver.
 
+Invalid and unsupported requests also retain the complete API-v2 envelope in `--json` mode. Plain `zim parse` continues to print the AST directly for compatibility, while `zim parse --json` prints the versioned envelope.
+
 Exit code `0` means success, `2` means invalid CLI/input syntax, and `3` means the expression parsed correctly but solving is unsupported.
 
 ## API v2 operations
@@ -202,6 +204,8 @@ Domain-changing rules are disabled unless their assumptions are explicit. By def
 ```js
 simplify(parse("x/x + x^0"), { nonZeroVariables: ["x"] });
 ```
+
+Rational-equation verification retains restrictions from the original, unsimplified denominators. Relation and nonlinear-system solvers return explicit unsupported or incomplete states when they cannot certify every boundary or solution branch; an unproved empty set is never reported as a successful no-solution result.
 
 ## Solver coverage
 

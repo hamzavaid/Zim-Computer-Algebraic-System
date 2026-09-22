@@ -133,7 +133,7 @@ function parseArguments(args: readonly string[]): ParsedArguments {
       if (!locale) throw new Error("--locale requires a locale");
     } else if (argument === "--max-derivation-nodes")
       maxDerivationNodes = positiveNumber(args[++index], argument, true);
-    else if (/^--?[A-Za-z]/u.test(argument)) throw new Error(`Unknown option '${argument}'`);
+    else if (/^--[A-Za-z]/u.test(argument)) throw new Error(`Unknown option '${argument}'`);
     else expressionParts.push(argument);
   }
   return {
@@ -243,7 +243,20 @@ function requestFor(options: ParsedArguments): ApiV2Request {
       };
     case "solve": {
       if (!options.variable) throw new Error("The solve command requires --variable <name>");
-      const tree = parse(options.expression);
+      let tree;
+      try {
+        tree = parse(options.expression);
+      } catch (caught) {
+        if (!(caught instanceof ZimError) || !options.json) throw caught;
+        return {
+          ...base,
+          operation: "solve",
+          expression: options.expression,
+          variable: options.variable,
+          domain: options.domain,
+          includeSteps: true,
+        };
+      }
       return tree.kind === "relation"
         ? {
             ...base,
@@ -341,18 +354,15 @@ export function runCommand(args: readonly string[], io: CliIo = console): number
       throw new Error("An expression is required");
     const request = requestFor(options);
     const response = executeV2(request);
-    if (response.status !== "ok")
-      io.error(
-        `${response.error?.code ?? response.status}: ${response.error?.message ?? "Operation did not complete"}`,
-      );
-    else if (options.json || options.command === "parse")
-      io.log(
-        JSON.stringify(
-          options.command === "parse" ? (response.result as Record<string, unknown>).ast : response,
-          null,
-          2,
-        ),
-      );
+    if (response.status !== "ok") {
+      if (options.json) io.log(JSON.stringify(response, null, 2));
+      else
+        io.error(
+          `${response.error?.code ?? response.status}: ${response.error?.message ?? "Operation did not complete"}`,
+        );
+    } else if (options.json) io.log(JSON.stringify(response, null, 2));
+    else if (options.command === "parse")
+      io.log(JSON.stringify((response.result as Record<string, unknown>).ast, null, 2));
     else {
       const result = response.result as Record<string, unknown>;
       if (options.trace && Array.isArray(result.steps))
@@ -409,7 +419,14 @@ function startRepl(): void {
   terminal.on("line", (line) => {
     const trimmed = line.trim();
     if (trimmed === "exit" || trimmed === "quit") return terminal.close();
-    if (trimmed) process.exitCode = runCommand(tokenizeReplLine(trimmed));
+    if (trimmed) {
+      try {
+        process.exitCode = runCommand(tokenizeReplLine(trimmed));
+      } catch (caught) {
+        console.error(caught instanceof Error ? caught.message : "Invalid REPL input");
+        process.exitCode = 2;
+      }
+    }
     terminal.prompt();
   });
 }

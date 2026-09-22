@@ -1,4 +1,14 @@
-import { compareExact, ExactNumber, isExactNumber, negateExact, rational } from "../ast/rational";
+import {
+  addExact,
+  compareExact,
+  divideExact,
+  ExactNumber,
+  isExactNumber,
+  multiplyExact,
+  negateExact,
+  rational,
+  subtractExact,
+} from "../ast/rational";
 import {
   binary,
   equation,
@@ -15,6 +25,9 @@ import { expressionEquals } from "../visitors/equal";
 import { containsVariable } from "../visitors/containsVariable";
 import { solveFor } from "./solveFor";
 import { SolveResult } from "./SolveResult";
+import { evaluateRational, isEverywhereDefined } from "../visitors/evaluateRational";
+import { isRationalIn } from "./rationalEquationSolver";
+import { format } from "../format/formatter";
 
 type InternalOperator = RelationOperator | "=";
 
@@ -24,6 +37,7 @@ export interface CandidateEvidence {
 }
 
 export interface RelationSolveResult {
+  readonly unsupportedReason?: string;
   readonly solution: SolutionSet;
   readonly accepted: readonly CandidateEvidence[];
   readonly rejected: readonly CandidateEvidence[];
@@ -35,12 +49,24 @@ export interface PiecewiseBranch {
   readonly expression: Expression;
 }
 
-const emptyEvidence = (solution: SolutionSet): RelationSolveResult => ({
-  solution,
-  accepted: [],
-  rejected: [],
-  conditions: [],
-});
+function unresolvedReason(solution: SolutionSet): string | undefined {
+  if (solution.kind === "conditional" && solution.set.kind === "empty")
+    return solution.conditions.join("; ");
+  if (solution.kind === "union")
+    return solution.sets.map(unresolvedReason).find((reason) => reason !== undefined);
+  return undefined;
+}
+
+const emptyEvidence = (solution: SolutionSet): RelationSolveResult => {
+  const unsupportedReason = unresolvedReason(solution);
+  return {
+    solution,
+    accepted: [],
+    rejected: [],
+    conditions: [],
+    ...(unsupportedReason === undefined ? {} : { unsupportedReason }),
+  };
+};
 
 function exactValues(result: SolveResult): ExactNumber[] | undefined {
   const values =
@@ -48,16 +74,23 @@ function exactValues(result: SolveResult): ExactNumber[] | undefined {
       ? [result.value]
       : result.kind === "multiple-solutions"
         ? [...result.values]
-        : result.kind === "no-solution"
+        : result.kind === "no-solution" || result.kind === "identity"
           ? []
           : undefined;
-  return values?.filter(isExactNumber);
+  return values?.every(isExactNumber) ? values : undefined;
 }
 
 function setFromSolveResult(result: SolveResult): SolutionSet {
   if (result.kind === "no-solution") return { kind: "empty" };
   if (result.kind === "identity") return { kind: "universal", domain: "real" };
-  if (result.kind === "solution") return { kind: "finite", values: [result.value] };
+  if (result.kind === "solution")
+    return result.conditions?.length
+      ? {
+          kind: "conditional",
+          set: { kind: "finite", values: [result.value] },
+          conditions: result.conditions,
+        }
+      : { kind: "finite", values: [result.value] };
   if (result.kind === "multiple-solutions") return { kind: "finite", values: result.values };
   return { kind: "conditional", set: { kind: "empty" }, conditions: [result.reason] };
 }
@@ -115,8 +148,28 @@ function evaluateRelation(
   }
 }
 
-function numeric(value: ExactNumber): number {
-  return evaluate(value);
+function exactRelation(
+  left: Expression,
+  right: Expression,
+  variableName: string,
+  value: ExactNumber,
+  operator: InternalOperator,
+): boolean {
+  try {
+    const environment = { [variableName]: value };
+    const a = evaluateRational(left, environment);
+    const b = evaluateRational(right, environment);
+    if (a === undefined || b === undefined) return false;
+    const sign = compareExact(a, b);
+    if (operator === "=") return sign === 0;
+    if (operator === "!=") return sign !== 0;
+    if (operator === "<") return sign < 0;
+    if (operator === "<=") return sign <= 0;
+    if (operator === ">") return sign > 0;
+    return sign >= 0;
+  } catch {
+    return false;
+  }
 }
 
 function solveInequality(
@@ -125,16 +178,22 @@ function solveInequality(
   operator: RelationOperator,
   variableName: string,
 ): SolutionSet {
+  const unsupported = (): SolutionSet => ({
+    kind: "conditional",
+    set: { kind: "empty" },
+    conditions: ["unsupported boundary or domain"],
+  });
+  if (!isRationalIn(left, variableName) || !isRationalIn(right, variableName)) return unsupported();
   const equalityRoots = exactValues(solveFor(equation(left, right), variableName));
   if (equalityRoots === undefined) {
     return { kind: "conditional", set: { kind: "empty" }, conditions: ["unsupported boundary"] };
   }
-  const poleValues = [
+  const poleResults = [
     ...denominators(left, variableName),
     ...denominators(right, variableName),
-  ].flatMap(
-    (denominator) => exactValues(solveFor(equation(denominator, rational(0n)), variableName)) ?? [],
-  );
+  ].map((denominator) => exactValues(solveFor(equation(denominator, rational(0n)), variableName)));
+  if (poleResults.some((value) => value === undefined)) return unsupported();
+  const poleValues = poleResults.flatMap((value) => value!);
   const points = uniqueSorted([...equalityRoots, ...poleValues]);
   const isPole = (point: ExactNumber): boolean =>
     poleValues.some((candidate) => compareExact(candidate, point) === 0);
@@ -144,11 +203,14 @@ function solveInequality(
     const upper = points[index];
     const sample =
       lower === undefined
-        ? numeric(upper!) - Math.max(1, Math.abs(numeric(upper!)))
+        ? upper === undefined
+          ? rational(0n)
+          : subtractExact(upper, rational(1n))
         : upper === undefined
-          ? numeric(lower) + Math.max(1, Math.abs(numeric(lower)))
-          : (numeric(lower) + numeric(upper)) / 2;
-    if (!evaluateRelation(left, right, variableName, sample, operator)) continue;
+          ? addExact(lower, rational(1n))
+          : divideExact(addExact(lower, upper), rational(2n));
+    if (!exactRelation(left, right, variableName, sample, operator)) continue;
+    if (points.length === 0) return { kind: "universal", domain: "real" };
     sets.push({
       kind: "interval",
       lower: lower ?? "-infinity",
@@ -156,17 +218,17 @@ function solveInequality(
       lowerInclusive:
         lower !== undefined &&
         !isPole(lower) &&
-        evaluateRelation(left, right, variableName, numeric(lower), operator),
+        exactRelation(left, right, variableName, lower, operator),
       upperInclusive:
         upper !== undefined &&
         !isPole(upper) &&
-        evaluateRelation(left, right, variableName, numeric(upper), operator),
+        exactRelation(left, right, variableName, upper, operator),
     });
   }
   for (const point of points) {
     if (
       !isPole(point) &&
-      evaluateRelation(left, right, variableName, numeric(point), operator) &&
+      exactRelation(left, right, variableName, point, operator) &&
       !sets.some(
         (set) =>
           set.kind === "interval" &&
@@ -186,6 +248,12 @@ function solveInequality(
 }
 
 function combineFinite(left: SolveResult, right: SolveResult): SolutionSet {
+  if ([left, right].some((value) => value.kind === "unsupported" || value.kind === "identity"))
+    return {
+      kind: "conditional",
+      set: { kind: "empty" },
+      conditions: ["unsupported absolute-value branch"],
+    };
   const expressions: Expression[] = [];
   for (const result of [left, right]) {
     if (result.kind === "solution") expressions.push(result.value);
@@ -212,6 +280,7 @@ function absoluteSolve(
   variableName: string,
 ): RelationSolveResult | undefined {
   if (!isExactNumber(right)) return undefined;
+  if (!isEverywhereDefined(argument) || !isRationalIn(argument, variableName)) return undefined;
   if (compareExact(right, rational(0n)) < 0) {
     const trueForNegative = operator === "!=" || operator === ">" || operator === ">=";
     return emptyEvidence(
@@ -226,8 +295,17 @@ function absoluteSolve(
       ),
     );
   }
-  const outer = operator === ">" || operator === ">=" || operator === "!=";
-  const strict = operator === ">" || operator === "<" || operator === "!=";
+  if (operator === "!=")
+    return emptyEvidence(
+      solveInequality(
+        binary("*", binary("-", argument, right), binary("+", argument, right)),
+        rational(0n),
+        "!=",
+        variableName,
+      ),
+    );
+  const outer = operator === ">" || operator === ">=";
+  const strict = operator === ">" || operator === "<";
   const lowOperator: RelationOperator = outer ? (strict ? "<" : "<=") : strict ? ">" : ">=";
   const highOperator: RelationOperator = outer ? (strict ? ">" : ">=") : strict ? "<" : "<=";
   const low = solveInequality(argument, negateExact(right), lowOperator, variableName);
@@ -251,6 +329,19 @@ function radicalSolve(source: Equation, variableName: string): RelationSolveResu
     return undefined;
   const transformed = equation(source.left.args[0]!, binary("^", source.right, rational(2n)));
   const candidates = solveFor(transformed, variableName);
+  const conditions = [
+    `${format(source.left.args[0]!)} must be nonnegative`,
+    `${format(source.right)} must be nonnegative`,
+  ];
+  if (candidates.kind === "unsupported" || candidates.kind === "identity")
+    return {
+      ...emptyEvidence({
+        kind: "conditional",
+        set: { kind: "empty" },
+        conditions: ["unsupported radical candidate solve"],
+      }),
+      conditions,
+    };
   const values =
     candidates.kind === "solution"
       ? [candidates.value]
@@ -259,11 +350,25 @@ function radicalSolve(source: Equation, variableName: string): RelationSolveResu
         : [];
   const accepted: CandidateEvidence[] = [];
   const rejected: CandidateEvidence[] = [];
+  let uncertified = false;
   for (const candidate of values) {
     let valid = false;
     try {
-      const value = evaluate(candidate);
-      valid = evaluateRelation(source.left, source.right, variableName, value, "=");
+      if (!isExactNumber(candidate)) {
+        uncertified = true;
+        continue;
+      }
+      const environment = { [variableName]: candidate };
+      const radicand = evaluateRational(source.left.args[0]!, environment);
+      const right = evaluateRational(source.right, environment);
+      if (radicand === undefined || right === undefined) {
+        uncertified = true;
+        continue;
+      }
+      valid =
+        compareExact(radicand, rational(0n)) >= 0 &&
+        compareExact(right, rational(0n)) >= 0 &&
+        compareExact(radicand, multiplyExact(right, right)) === 0;
     } catch {
       valid = false;
     }
@@ -272,6 +377,17 @@ function radicalSolve(source: Equation, variableName: string): RelationSolveResu
       reason: valid ? "verified in original relation" : "rejected by original relation",
     });
   }
+  if (uncertified)
+    return {
+      ...emptyEvidence({
+        kind: "conditional",
+        set: { kind: "empty" },
+        conditions: ["unsupported exact radical verification"],
+      }),
+      accepted,
+      rejected,
+      conditions,
+    };
   return {
     solution:
       accepted.length === 0
@@ -279,7 +395,7 @@ function radicalSolve(source: Equation, variableName: string): RelationSolveResu
         : { kind: "finite", values: accepted.map((entry) => entry.candidate) },
     accepted,
     rejected,
-    conditions: [`${variableName} + 1 must be nonnegative`],
+    conditions,
   };
 }
 
@@ -337,6 +453,16 @@ export function solvePiecewise(
   const rejected: CandidateEvidence[] = [];
   for (const branch of branches) {
     const solved = solveFor(equation(branch.expression, right), options.variable);
+    if (solved.kind === "unsupported" || solved.kind === "identity")
+      return {
+        ...emptyEvidence({
+          kind: "conditional",
+          set: { kind: "empty" },
+          conditions: ["unsupported piecewise branch"],
+        }),
+        accepted,
+        rejected,
+      };
     const candidates =
       solved.kind === "solution"
         ? [solved.value]

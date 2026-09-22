@@ -15,6 +15,7 @@ import { binary, Equation, Expression, func, unary } from "../ast/types";
 import { simplifyExpression } from "../simplify/simplify";
 import { containsVariable } from "../visitors/containsVariable";
 import { evaluate } from "../visitors/evaluate";
+import { evaluateRational } from "../visitors/evaluateRational";
 import { substitute } from "../visitors/substitute";
 import { solveFor } from "./solveFor";
 
@@ -125,7 +126,8 @@ function linearIn(expression: Expression, variableName: string): LinearExpressio
 function isolate(equation: Equation, variableName: string): Expression | undefined {
   const difference = subtract(equation.left, equation.right);
   const form = linearIn(difference, variableName);
-  if (!form || (isExactNumber(form.coefficient) && isZero(form.coefficient))) return undefined;
+  // Dividing by a parameter can discard an entire zero-coefficient branch.
+  if (!form || !isExactNumber(form.coefficient) || isZero(form.coefficient)) return undefined;
   const solved = divide(simplify(unary("-", form.constant)), form.coefficient);
   return containsVariable(solved, variableName) ? undefined : solved;
 }
@@ -153,6 +155,27 @@ function verify(
   equations: readonly Equation[],
   values: Readonly<Record<string, Expression>>,
 ): { verified: boolean; residual: number } {
+  const exactEnvironment: Record<string, ExactNumber> = {};
+  for (const [name, value] of Object.entries(values)) {
+    if (isExactNumber(value)) exactEnvironment[name] = value;
+  }
+  if (Object.keys(exactEnvironment).length === Object.keys(values).length) {
+    try {
+      const residuals = equations.map((source) => {
+        const left = evaluateRational(source.left, exactEnvironment);
+        const right = evaluateRational(source.right, exactEnvironment);
+        return left === undefined || right === undefined ? undefined : subtractExact(left, right);
+      });
+      if (residuals.every((value): value is ExactNumber => value !== undefined)) {
+        return {
+          verified: residuals.every(isZero),
+          residual: Math.max(...residuals.map((value) => Math.abs(evaluate(value)))),
+        };
+      }
+    } catch {
+      return { verified: false, residual: Number.POSITIVE_INFINITY };
+    }
+  }
   const environment = numericEnvironment(values);
   if (!environment) return { verified: false, residual: Number.POSITIVE_INFINITY };
   try {
@@ -341,11 +364,34 @@ function newtonSolve(
     const values = numericResiduals(equations, variables, point);
     residual = Math.max(Math.abs(values[0]), Math.abs(values[1]));
     if (residual <= tolerance) {
-      const scale = 1_000_000_000_000n;
-      const resultValues = {
-        [variables[0]]: rational(BigInt(Math.round(point[0] * Number(scale))), scale),
-        [variables[1]]: rational(BigInt(Math.round(point[1] * Number(scale))), scale),
+      // Preserve the computed double rather than rounding every candidate to 12 places.
+      const numericValue = (value: number): ExactNumber => {
+        const [mantissa, exponent] = value.toExponential(16).split("e");
+        const numerator = BigInt(mantissa!.replace(".", ""));
+        const scale = 16 - Number(exponent);
+        return scale >= 0
+          ? rational(numerator, 10n ** BigInt(scale))
+          : rational(numerator * 10n ** BigInt(-scale));
       };
+      const resultValues = {
+        [variables[0]]: numericValue(point[0]),
+        [variables[1]]: numericValue(point[1]),
+      };
+      const renderedEnvironment = numericEnvironment(resultValues)!;
+      try {
+        residual = Math.max(
+          ...equations.map((source) =>
+            Math.abs(
+              evaluate(source.left, renderedEnvironment) -
+                evaluate(source.right, renderedEnvironment),
+            ),
+          ),
+        );
+      } catch {
+        return { kind: "incomplete", reason: "candidate-outside-original-domain" };
+      }
+      if (!Number.isFinite(residual) || residual > tolerance)
+        return { kind: "incomplete", reason: "candidate-fails-original-system-verification" };
       return {
         kind: "finite",
         method: "newton",
@@ -381,11 +427,28 @@ export function solveNonlinearSystem(
   if (new Set(variables).size !== variables.length)
     return { kind: "unsupported", reason: "System variables must be unique" };
   if (equations.length < variables.length) {
+    // Equation count alone does not establish real dimension or even existence.
+    if (equations.length === 1 && variables.length === 2) {
+      const source = equations[0]!;
+      const left = squareForm(source.left, variables[0]!, variables[1]!);
+      const right = squareForm(source.right, variables[0]!, variables[1]!);
+      if (left && right) {
+        const form = combineSquare(left, right, true);
+        const xSign = compareExact(form.x, rational(0n));
+        const ySign = compareExact(form.y, rational(0n));
+        const cSign = compareExact(form.constant, rational(0n));
+        if (xSign !== 0 && xSign === ySign && cSign === -xSign)
+          return {
+            kind: "positive-dimensional",
+            dimension: 1,
+            constraints: equations,
+            verified: true,
+          };
+      }
+    }
     return {
-      kind: "positive-dimensional",
-      dimension: variables.length - equations.length,
-      constraints: equations,
-      verified: true,
+      kind: "unsupported",
+      reason: "Real dimension of this underdetermined system is not certified",
     };
   }
   if (variables.length !== 2 || equations.length < 2) {

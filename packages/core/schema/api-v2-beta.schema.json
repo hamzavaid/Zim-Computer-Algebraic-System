@@ -33,6 +33,16 @@
         "variables": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "domain": { "enum": ["real", "complex"] },
         "includeSteps": { "type": "boolean" },
+        "mode": { "enum": ["exact", "numeric"] },
+        "initialGuess": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "maxIterations": { "type": "integer", "minimum": 1 },
+        "tolerance": { "type": "number", "exclusiveMinimum": 0 },
+        "maxResultantDegree": { "type": "integer", "minimum": 1 },
+        "renderMode": { "enum": ["concise", "classroom", "diagnostic"] },
+        "locale": { "type": "string" },
         "budget": {
           "type": "object",
           "additionalProperties": false,
@@ -40,12 +50,52 @@
             "maxInputLength": { "type": "integer", "minimum": 1 },
             "maxAstNodes": { "type": "integer", "minimum": 1 },
             "maxNestingDepth": { "type": "integer", "minimum": 1 },
-            "maxOperations": { "type": "integer", "minimum": 1 },
-            "maxMilliseconds": { "type": "number", "exclusiveMinimum": 0 },
-            "maxDerivationNodes": { "type": "integer", "minimum": 1 }
+            "maxPolynomialDegree": { "type": "integer", "minimum": 1 },
+            "maxCandidateRoots": { "type": "integer", "minimum": 1 },
+            "maxDerivationNodes": { "type": "integer", "minimum": 1 },
+            "maxIterations": { "type": "integer", "minimum": 1 }
           }
         }
-      }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            { "properties": { "operation": { "const": "capabilities" } } },
+            {
+              "properties": { "operation": { "enum": ["parse", "format", "latex"] } },
+              "required": ["expression"]
+            },
+            {
+              "properties": { "operation": { "const": "simplify" } },
+              "required": ["expression"]
+            },
+            {
+              "properties": { "operation": { "const": "solve" } },
+              "required": ["expression", "variable"]
+            },
+            {
+              "properties": { "operation": { "const": "analyzePolynomial" } },
+              "required": ["expression", "variable"]
+            },
+            {
+              "properties": { "operation": { "const": "solveRelation" } },
+              "required": ["relation", "variable"]
+            },
+            {
+              "properties": { "operation": { "const": "solveSystem" } },
+              "required": ["expressions", "variables"]
+            },
+            {
+              "properties": { "operation": { "const": "solveNonlinearSystem" } },
+              "required": ["equations", "variables"]
+            },
+            {
+              "properties": { "operation": { "const": "derive" } },
+              "required": ["expression", "variable"]
+            }
+          ]
+        }
+      ]
     },
     "response": {
       "type": "object",

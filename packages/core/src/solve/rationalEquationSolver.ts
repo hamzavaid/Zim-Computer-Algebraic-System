@@ -9,7 +9,8 @@ import {
   subtractExact,
 } from "../ast/rational";
 import { Equation, Expression } from "../ast/types";
-import { evaluate } from "../visitors/evaluate";
+import { evaluateRational } from "../visitors/evaluateRational";
+import { polynomialsCoprime } from "../numeric/polynomialRoots";
 import { SolveDomain } from "./SolveOptions";
 import { solvePolynomial } from "./polynomialSolver";
 import { SolveResult } from "./SolveResult";
@@ -182,28 +183,69 @@ function convert(expression: Expression, variableName: string): RationalPolynomi
   };
 }
 
-function numericPolynomial(polynomial: Polynomial, value: number): number {
-  let result = 0;
-  for (let exponent = degree(polynomial) ?? 0; exponent >= 0; exponent--) {
-    const coefficient = polynomial.coefficients.get(exponent);
-    result = result * value + (coefficient ? evaluate(coefficient) : 0);
-  }
-  return result;
+export function isRationalIn(expression: Expression, variableName: string): boolean {
+  return convert(expression, variableName).kind === "rational-function";
 }
 
-function filterExcluded(result: SolveResult, denominators: readonly Polynomial[]): SolveResult {
+/** Original restrictions must survive cross multiplication, including nested reciprocals. */
+function domainPolynomials(expression: Expression, variableName: string): Polynomial[] {
+  if (expression.kind === "unary") return domainPolynomials(expression.operand, variableName);
+  if (expression.kind !== "binary") return [];
+  const restrictions = [
+    ...domainPolynomials(expression.left, variableName),
+    ...domainPolynomials(expression.right, variableName),
+  ];
+  const restricted =
+    expression.operator === "/"
+      ? expression.right
+      : expression.operator === "^" &&
+          expression.right.kind === "constant" &&
+          expression.right.value <= 0n
+        ? expression.left
+        : undefined;
+  if (restricted) {
+    const converted = convert(restricted, variableName);
+    if (converted.kind === "rational-function") restrictions.push(converted.value.numerator);
+  }
+  return restrictions;
+}
+
+function filterExcluded(
+  result: SolveResult,
+  original: Equation,
+  variableName: string,
+  polynomial: Polynomial,
+  restrictions: readonly Polynomial[],
+): SolveResult {
+  if (result.kind === "identity" && restrictions.some((value) => degree(value) !== 0))
+    return { kind: "unsupported", reason: "Rational identity requires excluded-domain conditions" };
   if (result.kind !== "solution" && result.kind !== "multiple-solutions") return result;
   const values = result.kind === "solution" ? [result.value] : [...result.values];
+  let uncertified = false;
   const kept = values.filter((value) => {
+    if (!isExactNumber(value)) {
+      const safe = restrictions.every((restriction) => polynomialsCoprime(polynomial, restriction));
+      if (!safe) uncertified = true;
+      return safe;
+    }
     try {
-      const numeric = evaluate(value);
-      return denominators.every(
-        (denominator) => Math.abs(numericPolynomial(denominator, numeric)) > 1e-9,
-      );
+      const environment = { [variableName]: value };
+      const left = evaluateRational(original.left, environment);
+      const right = evaluateRational(original.right, environment);
+      if (left === undefined || right === undefined) {
+        uncertified = true;
+        return false;
+      }
+      return isZero(subtractExact(left, right));
     } catch {
-      return true;
+      return false;
     }
   });
+  if (uncertified)
+    return {
+      kind: "unsupported",
+      reason: "Cannot certify all algebraic candidates against original denominator restrictions",
+    };
   if (kept.length === 0) return { kind: "no-solution" };
   if (kept.length === 1) {
     return { kind: "solution", variable: result.variable, value: kept[0]!, verified: true };
@@ -228,10 +270,16 @@ export function solveRationalEquation(
     combine(right.value.numerator, left.value.denominator, "multiply"),
     "subtract",
   );
-  return filterExcluded(solvePolynomial(crossDifference, variableName, domain), [
-    left.value.denominator,
-    right.value.denominator,
-  ]);
+  return filterExcluded(
+    solvePolynomial(crossDifference, variableName, domain),
+    equation,
+    variableName,
+    crossDifference,
+    [
+      ...domainPolynomials(equation.left, variableName),
+      ...domainPolynomials(equation.right, variableName),
+    ],
+  );
 }
 
 export function containsVariableDenominator(expression: Expression, variableName: string): boolean {

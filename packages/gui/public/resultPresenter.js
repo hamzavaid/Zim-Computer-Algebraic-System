@@ -1,20 +1,29 @@
 /* A small, data-only presenter shared by the browser and GUI tests. */
 (function (root) {
-  function expression(value) {
+  const precedence = { "+": 1, "-": 1, "*": 2, "/": 2, "%": 2, unary: 3, "^": 4, atom: 5 };
+
+  function expression(value, parent = 0, side = "") {
     if (value === null || value === undefined) return "?";
     if (typeof value !== "object") return String(value);
     if (value.kind === "constant") return String(value.value);
     if (value.kind === "rational") return `${value.numerator}/${value.denominator}`;
     if (value.kind === "variable") return String(value.name);
-    if (value.kind === "unary") return `${value.operator}${expression(value.operand)}`;
+    if (value.kind === "unary") {
+      const rendered = `${value.operator}${expression(value.operand, precedence.unary, "right")}`;
+      return precedence.unary < parent ? `(${rendered})` : rendered;
+    }
     if (value.kind === "binary") {
-      const left = expression(value.left);
-      const right = expression(value.right);
-      if (value.operator === "/") return `${left} / ${right}`;
-      return `${left} ${value.operator} ${right}`;
+      const own = precedence[value.operator] ?? 0;
+      const leftParent = value.operator === "^" ? own + 1 : own;
+      const rightParent = ["-", "/", "%"].includes(value.operator) ? own + 1 : own;
+      const left = expression(value.left, leftParent, "left");
+      const right = expression(value.right, rightParent, "right");
+      const rendered = `${left} ${value.operator} ${right}`;
+      const equalPowerOnLeft = side === "left" && value.operator === "^" && own === parent;
+      return own < parent || equalPowerOnLeft ? `(${rendered})` : rendered;
     }
     if (value.kind === "function")
-      return `${value.name}(${(value.args ?? []).map(expression).join(", ")})`;
+      return `${value.name}(${(value.args ?? []).map((argument) => expression(argument)).join(", ")})`;
     return "symbolic value";
   }
 

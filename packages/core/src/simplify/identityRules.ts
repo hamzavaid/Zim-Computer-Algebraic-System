@@ -1,6 +1,7 @@
 import { isExactNumber, isOne, isZero } from "../ast/rational";
 import { constant } from "../ast/types";
 import { RewriteRule } from "./RewriteRule";
+import { isEverywhereDefined } from "../visitors/evaluateRational";
 
 export const identityRule: RewriteRule = {
   name: "zero-one-identities",
@@ -13,7 +14,10 @@ export const identityRule: RewriteRule = {
       if (rightNumber && isZero(expression.right)) return expression.left;
     }
     if (expression.operator === "*") {
-      if ((leftNumber && isZero(expression.left)) || (rightNumber && isZero(expression.right)))
+      if (
+        (leftNumber && isZero(expression.left) && isEverywhereDefined(expression.right)) ||
+        (rightNumber && isZero(expression.right) && isEverywhereDefined(expression.left))
+      )
         return constant(0n);
       if (leftNumber && isOne(expression.left)) return expression.right;
       if (rightNumber && isOne(expression.right)) return expression.left;

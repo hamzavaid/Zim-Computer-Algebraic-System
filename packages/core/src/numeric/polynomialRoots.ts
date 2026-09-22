@@ -175,6 +175,16 @@ function polynomialGcd(leftInput: DensePolynomial, rightInput: DensePolynomial):
   return monic(left);
 }
 
+/** Exact certificate that no root of one polynomial is a root of the other. */
+export function polynomialsCoprime(left: Polynomial, right: Polynomial): boolean {
+  if (left.variable !== right.variable) return false;
+  const dense = (value: Polynomial): DensePolynomial =>
+    Array.from({ length: (sparseDegree(value) ?? -1) + 1 }, (_, exponent) =>
+      coefficient(value, exponent),
+    );
+  return polynomialGcd(dense(left), dense(right)).length === 1;
+}
+
 function evaluateExact(input: DensePolynomial, value: ExactNumber): ExactNumber {
   let result = zero();
   for (let index = input.length - 1; index >= 0; index -= 1) {
