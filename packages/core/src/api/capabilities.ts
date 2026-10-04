@@ -7,7 +7,7 @@ export interface CapabilityLimits {
 }
 
 export interface CapabilityRegistry {
-  readonly release: "2.5.0";
+  readonly release: "2.5.3";
   readonly apiVersions: readonly ["1.0", "2.0-beta"];
   readonly operations: readonly string[];
   readonly solverFamilies: readonly string[];
@@ -17,7 +17,7 @@ export interface CapabilityRegistry {
 }
 
 const registry: CapabilityRegistry = Object.freeze({
-  release: "2.5.0",
+  release: "2.5.3",
   apiVersions: ["1.0", "2.0-beta"] as const,
   operations: [
     "parse",
@@ -34,6 +34,7 @@ const registry: CapabilityRegistry = Object.freeze({
     "differentiate",
     "limit",
     "integrate",
+    "calculate",
   ],
   solverFamilies: [
     "linear",
@@ -48,6 +49,7 @@ const registry: CapabilityRegistry = Object.freeze({
     "nonlinear-system",
     "symbolic-calculus",
     "numerical-quadrature",
+    "scientific-calculator",
   ],
   domains: ["real", "complex", "integer", "natural"] as const,
   limits: {

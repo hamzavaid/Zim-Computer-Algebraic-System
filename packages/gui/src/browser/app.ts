@@ -44,6 +44,7 @@ const API_TO_GUI = Object.freeze({
   differentiate: "Differentiate",
   limit: "Limit",
   integrate: "Integrate",
+  calculate: "Scientific Calculator",
 });
 void API_TO_GUI;
 const byId = <T extends HTMLElement>(id: string): T => {

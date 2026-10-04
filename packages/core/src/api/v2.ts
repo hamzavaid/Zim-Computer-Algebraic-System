@@ -21,6 +21,7 @@ import { ExactNumber, isExactNumber } from "../ast/rational";
 import { format } from "../format/formatter";
 import { toLatex } from "../format/latex";
 import { simplifyExpression } from "../simplify/simplify";
+import { calculate } from "../numeric/scientificCalculator";
 
 export const API_VERSION_V2 = "2.0-beta" as const;
 
@@ -97,6 +98,13 @@ export type ApiV2Request =
       readonly precisionDigits?: number;
       readonly maxIterations?: number;
       readonly maxSeriesTerms?: number;
+    })
+  | (BaseRequest & {
+      readonly operation: "calculate";
+      readonly expression: string;
+      readonly mode?: "exact" | "decimal";
+      readonly angleUnit?: "radians" | "degrees";
+      readonly precisionDigits?: number;
     })
   | (BaseRequest & {
       readonly operation: "solveSystem";
@@ -261,6 +269,19 @@ function validateRequest(value: unknown): value is ApiV2Request {
         )
       );
     }
+    case "calculate":
+      return (
+        expression() &&
+        (value.mode === undefined || value.mode === "exact" || value.mode === "decimal") &&
+        (value.angleUnit === undefined ||
+          value.angleUnit === "radians" ||
+          value.angleUnit === "degrees") &&
+        (value.precisionDigits === undefined ||
+          (typeof value.precisionDigits === "number" &&
+            Number.isInteger(value.precisionDigits) &&
+            value.precisionDigits >= 1 &&
+            value.precisionDigits <= 15))
+      );
     default:
       return false;
   }
@@ -417,7 +438,8 @@ function v1Request(request: ApiV2Request): ApiRequest | undefined {
     request.operation === "derive" ||
     request.operation === "differentiate" ||
     request.operation === "limit" ||
-    request.operation === "integrate"
+    request.operation === "integrate" ||
+    request.operation === "calculate"
   )
     return undefined;
   if (request.operation === "solveSystem") {
@@ -764,6 +786,26 @@ export function executeV2(request: unknown): ApiV2Response {
           text: `${format(output)}${result.kind === "complete" ? ` + ${result.constant}` : ""}`,
           latex: `${toLatex(output)}${result.kind === "complete" ? ` + ${result.constant}` : ""}`,
         },
+        diagnostics: { operation: request.operation },
+      });
+    }
+    if (request.operation === "calculate") {
+      const result = calculate(parsedExpression(request.expression, request.budget), {
+        mode: request.mode,
+        angleUnit: request.angleUnit,
+        precisionDigits: request.precisionDigits,
+      });
+      return finish({
+        status:
+          result.kind === "exact" || result.kind === "decimal"
+            ? "ok"
+            : result.kind === "unsupported"
+              ? "unsupported"
+              : "invalid",
+        result:
+          result.kind === "exact"
+            ? { ...result, expression: serializeExpression(result.expression) }
+            : result,
         diagnostics: { operation: request.operation },
       });
     }

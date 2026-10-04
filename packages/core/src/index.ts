@@ -54,6 +54,7 @@ export * from "./calculus/integrate";
 export * from "./calculus/quadrature";
 export * from "./values/algebraic";
 export * from "./numeric/polynomialRoots";
+export * from "./numeric/scientificCalculator";
 export * from "./sets/SolutionSet";
 export * from "./solve/relationSolver";
 export * from "./solve/nonlinearSystemSolver";

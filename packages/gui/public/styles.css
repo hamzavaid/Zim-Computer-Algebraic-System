@@ -110,6 +110,8 @@ a:focus-visible {
 .header-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.75rem;
 }
 .settings-panel {
@@ -284,6 +286,90 @@ button.quiet {
   background: transparent;
 }
 
+.button-link {
+  display: inline-flex;
+  min-height: 2.55rem;
+  align-items: center;
+  padding: 0.62rem 0.95rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.55rem;
+  color: var(--surface);
+  background: var(--accent-strong);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.button-link:hover {
+  filter: brightness(1.1);
+}
+
+.secondary-link {
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.compact-header h1 {
+  font-size: clamp(2rem, 4vw, 3.6rem);
+}
+
+.calculator-layout {
+  display: grid;
+  grid-template-columns: minmax(20rem, 1.35fr) minmax(16rem, 0.65fr);
+  gap: 1rem;
+  width: min(72rem, calc(100% - 2rem));
+  margin-inline: auto;
+  padding-bottom: 3rem;
+}
+
+.calculator-display {
+  padding: 1rem;
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  font-size: clamp(1.15rem, 3vw, 1.55rem);
+}
+
+.calculator-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.calculator-keypad {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(3rem, 1fr));
+  gap: 0.55rem;
+}
+
+.calculator-keypad button {
+  min-height: 3.25rem;
+  font-size: 1.05rem;
+}
+
+.calculator-keypad .function-key {
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.calculator-keypad .operator-key {
+  font-weight: 800;
+}
+
+.calculator-keypad .calculator-wide {
+  grid-column: span 2;
+}
+
+.calculator-result {
+  display: block;
+  min-height: 5rem;
+  padding: 1.2rem;
+  border-left: 0.3rem solid var(--accent);
+  color: var(--text);
+  background: var(--accent-soft);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 4vw, 2.5rem);
+  overflow-wrap: anywhere;
+}
+
 .hint,
 #status-output {
   margin: 0.45rem 0 0;
@@ -424,6 +510,10 @@ summary {
     grid-row: auto;
   }
 
+  .calculator-layout {
+    grid-template-columns: 1fr;
+  }
+
   .section-heading,
   .actions,
   .copy-actions {
@@ -435,7 +525,13 @@ summary {
 @media (max-width: 34rem) {
   .site-header {
     align-items: flex-start;
+    flex-direction: column;
     gap: 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .solve-options {
@@ -444,6 +540,10 @@ summary {
 
   .actions button {
     flex: 1 1 45%;
+  }
+
+  .calculator-options {
+    grid-template-columns: 1fr;
   }
 }
 

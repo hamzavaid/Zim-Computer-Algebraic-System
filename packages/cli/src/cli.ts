@@ -21,6 +21,7 @@ export const API_TO_CLI = Object.freeze({
   differentiate: "differentiate",
   limit: "limit",
   integrate: "integrate",
+  calculate: "calculate",
 });
 const commandHelp: Readonly<Record<string, string>> = {
   parse: "zim parse [--json] <expression>",
@@ -39,6 +40,8 @@ const commandHelp: Readonly<Record<string, string>> = {
     "zim limit --variable, -v <name> --point <value|infinity> [--direction both|left|right] [--json|--latex] <expression>",
   integrate:
     "zim integrate --variable, -v <name> [--lower <value> --upper <value>] [--integration-mode symbolic|numeric] [--precision-digits <n>] [--max-iterations <n>] [--max-series-terms <n>] [--json|--latex] <expression>",
+  calculate:
+    "zim calculate [--result-mode exact|decimal] [--angle-unit radians|degrees] [--precision-digits <n>] [--json|--latex] <expression>",
   format: "zim format <expression>",
   latex: "zim latex <expression-or-equation>",
   capabilities: "zim capabilities [--json]",
@@ -69,6 +72,8 @@ interface ParsedArguments {
   readonly integrationMode?: "symbolic" | "numeric";
   readonly precisionDigits?: number;
   readonly maxSeriesTerms?: number;
+  readonly calculatorMode?: "exact" | "decimal";
+  readonly angleUnit?: "radians" | "degrees";
   readonly help: boolean;
 }
 function positiveNumber(value: string | undefined, flag: string, integer = false): number {
@@ -108,6 +113,7 @@ function parseArguments(args: readonly string[]): ParsedArguments {
     integrationMode: "symbolic" | "numeric" | undefined,
     precisionDigits: number | undefined,
     maxSeriesTerms: number | undefined;
+  let calculatorMode: "exact" | "decimal" | undefined, angleUnit: "radians" | "degrees" | undefined;
   let trace = false,
     json = false,
     latex = false,
@@ -178,7 +184,17 @@ function parseArguments(args: readonly string[]): ParsedArguments {
       precisionDigits = positiveNumber(args[++index], argument, true);
     else if (argument === "--max-series-terms")
       maxSeriesTerms = positiveNumber(args[++index], argument, true);
-    else if (/^--[A-Za-z]/u.test(argument)) throw new Error(`Unknown option '${argument}'`);
+    else if (argument === "--result-mode") {
+      const value = args[++index];
+      if (value !== "exact" && value !== "decimal")
+        throw new Error("--result-mode must be exact or decimal");
+      calculatorMode = value;
+    } else if (argument === "--angle-unit") {
+      const value = args[++index];
+      if (value !== "radians" && value !== "degrees")
+        throw new Error("--angle-unit must be radians or degrees");
+      angleUnit = value;
+    } else if (/^--[A-Za-z]/u.test(argument)) throw new Error(`Unknown option '${argument}'`);
     else expressionParts.push(argument);
   }
   return {
@@ -205,6 +221,8 @@ function parseArguments(args: readonly string[]): ParsedArguments {
     integrationMode,
     precisionDigits,
     maxSeriesTerms,
+    calculatorMode,
+    angleUnit,
     help,
   };
 }
@@ -416,6 +434,15 @@ function requestFor(options: ParsedArguments): ApiV2Request {
         precisionDigits: options.precisionDigits,
         maxIterations: options.maxIterations,
         maxSeriesTerms: options.maxSeriesTerms,
+      };
+    case "calculate":
+      return {
+        ...base,
+        operation: "calculate",
+        expression: options.expression,
+        mode: options.calculatorMode,
+        angleUnit: options.angleUnit,
+        precisionDigits: options.precisionDigits,
       };
     default:
       throw new Error(`Unknown command '${options.command}'.\n${usage}`);

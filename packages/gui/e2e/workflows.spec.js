@@ -71,7 +71,7 @@ test("API v2 workbench exercises every developer operation", async ({ page }) =>
   }
   await operation.selectOption("capabilities");
   await run.click();
-  await expect(response).toContainText('"release": "2.5.0"');
+  await expect(response).toContainText('"release": "2.5.3"');
   await expect(page.getByRole("button", { name: "Cancel" })).toBeDisabled();
   await expect(page.locator("#history-output li")).not.toHaveCount(0);
 });
@@ -118,7 +118,7 @@ test("operation controls, capability summary, and LaTeX follow selected operatio
   await operation.selectOption("capabilities");
   await expect(page.getByLabel("Expression or equation")).toBeHidden();
   await run.click();
-  await expect(page.locator("#math-output")).toContainText("Release 2.5.0");
+  await expect(page.locator("#math-output")).toContainText("Release 2.5.3");
   await expect(page.locator(".raw-panel")).toBeHidden();
   await operation.selectOption("solveRelation");
   await page.getByLabel("Expression or equation").fill("sqrt(x + 1) = x - 1");
@@ -173,4 +173,23 @@ test("calculus operations expose only their controls and render exact output", a
   await expression.fill("x^2");
   await run.click();
   await expect(page.locator("#result-output")).toContainText("0.333333");
+});
+
+test("scientific calculator subpage uses the Zim API in exact and decimal modes", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Scientific Calculator" }).click();
+  await expect(page).toHaveURL(/\/calculator$/);
+  const display = page.getByLabel("Calculator expression");
+  await display.fill("1/3 + 1/6");
+  await page.getByRole("button", { name: "Equals" }).click();
+  await expect(page.locator("#calculator-result")).toHaveText("1/2");
+  await page.getByLabel("Result mode").selectOption("decimal");
+  await page.getByLabel("Angle unit").selectOption("degrees");
+  await display.fill("sin(30) + sqrt(9)");
+  await display.press("Enter");
+  await expect(page.locator("#calculator-result")).toHaveText("3.5");
+  await page.getByRole("link", { name: "Back to workspace" }).click();
+  await expect(page).toHaveURL(/\/$/);
 });

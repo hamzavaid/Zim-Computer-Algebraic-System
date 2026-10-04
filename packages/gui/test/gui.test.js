@@ -15,6 +15,7 @@ const manifest = JSON.parse(
   fs.readFileSync(path.join(workspace, "datasets/gui/manifest.json"), "utf8"),
 );
 const html = fs.readFileSync(path.join(__dirname, "../public/index.html"), "utf8");
+const calculatorHtml = fs.readFileSync(path.join(__dirname, "../public/calculator.html"), "utf8");
 
 let server;
 let endpoint;
@@ -89,6 +90,25 @@ test("GUI exposes the required accessible controls and inspection panels", async
   }
 });
 
+test("GUI serves an accessible scientific calculator subpage", async () => {
+  assert.match(html, /href=["']\/calculator["']/);
+  const response = await fetch(`${endpoint}/calculator`);
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), calculatorHtml);
+  for (const id of [
+    "calculator-display",
+    "calculator-mode",
+    "calculator-angle",
+    "calculator-result",
+    "calculator-keypad",
+  ])
+    assert.match(calculatorHtml, new RegExp(`id=["']${id}["']`));
+  assert.doesNotMatch(calculatorHtml, /onclick=/);
+  const script = await fetch(`${endpoint}/calculator.js`);
+  assert.equal(script.status, 200);
+  assert.match(await script.text(), /operation:\s*["']calculate["']/);
+});
+
 test("browser rendering uses safe native MathML and backend-provided steps", () => {
   const source = fs.readFileSync(path.join(__dirname, "../src/browser/app.ts"), "utf8");
   assert.match(source, /createElementNS\(mathNamespace/);
@@ -129,7 +149,7 @@ test("API v2 HTTP transport preserves the public response envelope", async () =>
   assert.equal(payload.apiVersion, "2.0-beta");
   assert.equal(payload.requestId, "gui-test");
   assert.equal(payload.status, "ok");
-  assert.equal(payload.result.release, "2.5.0");
+  assert.equal(payload.result.release, "2.5.3");
   assert.equal(typeof payload.timing.totalMs, "number");
 });
 
@@ -146,6 +166,9 @@ test("GUI explicitly exposes every API v2 operation", () => {
     "solveRelation",
     "solveNonlinearSystem",
     "derive",
+    "differentiate",
+    "limit",
+    "integrate",
   ];
   for (const operation of operations) assert.match(html, new RegExp(`value=["']${operation}["']`));
   assert.match(html, /id=["']raw-request-output["']/);

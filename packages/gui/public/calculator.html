@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Zim scientific calculator" />
+    <title>Zim 2.5.3 Scientific Calculator</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/calculator.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#calculator">Skip to calculator</a>
+    <header class="site-header compact-header">
+      <div>
+        <p class="eyebrow">Zim mathematics tools</p>
+        <h1>Scientific Calculator</h1>
+      </div>
+      <div class="header-actions">
+        <a class="button-link secondary-link" href="/">Back to workspace</a>
+        <button id="calculator-theme" class="secondary" type="button" aria-pressed="false">
+          Toggle theme
+        </button>
+      </div>
+    </header>
+
+    <main id="calculator" class="calculator-layout">
+      <section class="card calculator-card" aria-labelledby="calculator-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Powered by Zim</p>
+            <h2 id="calculator-heading">Enter a calculation</h2>
+          </div>
+          <span id="calculator-status" role="status" aria-live="polite">Ready</span>
+        </div>
+
+        <label for="calculator-display">Calculator expression</label>
+        <input
+          id="calculator-display"
+          class="calculator-display"
+          inputmode="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Try: sin(pi / 2) + sqrt(9)"
+        />
+
+        <div class="calculator-options">
+          <div>
+            <label for="calculator-mode">Result mode</label>
+            <select id="calculator-mode">
+              <option value="exact">Exact</option>
+              <option value="decimal">Decimal</option>
+            </select>
+          </div>
+          <div data-decimal-option hidden>
+            <label for="calculator-angle">Angle unit</label>
+            <select id="calculator-angle">
+              <option value="radians">Radians</option>
+              <option value="degrees">Degrees</option>
+            </select>
+          </div>
+          <div data-decimal-option hidden>
+            <label for="calculator-precision">Significant digits</label>
+            <input id="calculator-precision" type="number" min="1" max="15" value="12" />
+          </div>
+        </div>
+
+        <div id="calculator-keypad" class="calculator-keypad" aria-label="Calculator keypad">
+          <button type="button" class="function-key" data-value="sin(">sin</button>
+          <button type="button" class="function-key" data-value="cos(">cos</button>
+          <button type="button" class="function-key" data-value="tan(">tan</button>
+          <button type="button" class="function-key" data-value="ln(">ln</button>
+          <button type="button" class="function-key" data-value="sqrt(">√</button>
+          <button type="button" class="function-key" data-value="exp(">exp</button>
+          <button type="button" class="function-key" data-value="abs(">abs</button>
+          <button type="button" class="function-key" data-value="^">xʸ</button>
+          <button type="button" data-value="7">7</button>
+          <button type="button" data-value="8">8</button>
+          <button type="button" data-value="9">9</button>
+          <button type="button" class="operator-key" data-value=" / ">÷</button>
+          <button type="button" data-value="4">4</button>
+          <button type="button" data-value="5">5</button>
+          <button type="button" data-value="6">6</button>
+          <button type="button" class="operator-key" data-value=" * ">×</button>
+          <button type="button" data-value="1">1</button>
+          <button type="button" data-value="2">2</button>
+          <button type="button" data-value="3">3</button>
+          <button type="button" class="operator-key" data-value=" - ">−</button>
+          <button type="button" data-value="0">0</button>
+          <button type="button" data-value=".">.</button>
+          <button type="button" data-value="pi">π</button>
+          <button type="button" class="operator-key" data-value=" + ">+</button>
+          <button type="button" data-value="(">(</button>
+          <button type="button" data-value=")">)</button>
+          <button type="button" data-value="e">e</button>
+          <button type="button" data-value=" mod ">mod</button>
+          <button type="button" class="quiet calculator-wide" data-action="clear">Clear</button>
+          <button type="button" class="quiet" data-action="backspace" aria-label="Backspace">
+            ⌫
+          </button>
+          <button type="button" class="equals-key calculator-wide" data-action="equals">
+            Equals
+          </button>
+        </div>
+        <p class="hint">
+          Use explicit multiplication, such as <code>2*pi</code>. Press Enter to calculate.
+        </p>
+        <p id="calculator-error" class="error" role="alert" hidden></p>
+      </section>
+
+      <section class="card calculator-result-card" aria-labelledby="calculator-result-heading">
+        <p class="eyebrow">Result</p>
+        <h2 id="calculator-result-heading">Zim output</h2>
+        <output id="calculator-result" class="calculator-result" aria-live="polite">0</output>
+        <details>
+          <summary>LaTeX source</summary>
+          <pre id="calculator-latex" class="code-output">0</pre>
+        </details>
+      </section>
+    </main>
+  </body>
+</html>

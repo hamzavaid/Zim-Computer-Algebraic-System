@@ -7,6 +7,7 @@ export const MAX_REQUEST_BYTES = 64 * 1024;
 
 const publicDirectory = path.resolve(__dirname, "../public");
 const browserScript = path.resolve(__dirname, "browser/app.js");
+const calculatorScript = path.resolve(__dirname, "browser/calculator.js");
 
 interface BodyResult {
   readonly tooLarge: boolean;
@@ -71,12 +72,24 @@ async function handle(request: IncomingMessage, response: ServerResponse): Promi
       );
       return;
     }
+    if (requestUrl.pathname === "/calculator") {
+      await sendFile(
+        response,
+        path.join(publicDirectory, "calculator.html"),
+        "text/html; charset=utf-8",
+      );
+      return;
+    }
     if (requestUrl.pathname === "/styles.css") {
       await sendFile(response, path.join(publicDirectory, "styles.css"), "text/css; charset=utf-8");
       return;
     }
     if (requestUrl.pathname === "/app.js") {
       await sendFile(response, browserScript, "text/javascript; charset=utf-8");
+      return;
+    }
+    if (requestUrl.pathname === "/calculator.js") {
+      await sendFile(response, calculatorScript, "text/javascript; charset=utf-8");
       return;
     }
     if (requestUrl.pathname === "/resultPresenter.js") {

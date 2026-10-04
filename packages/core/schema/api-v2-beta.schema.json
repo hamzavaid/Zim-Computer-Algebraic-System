@@ -25,7 +25,8 @@
             "derive",
             "differentiate",
             "limit",
-            "integrate"
+            "integrate",
+            "calculate"
           ]
         },
         "expression": { "type": "string" },
@@ -36,7 +37,7 @@
         "variables": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "domain": { "enum": ["real", "complex"] },
         "includeSteps": { "type": "boolean" },
-        "mode": { "enum": ["exact", "numeric"] },
+        "mode": { "enum": ["exact", "numeric", "decimal"] },
         "initialGuess": {
           "type": "object",
           "additionalProperties": { "type": "number" }
@@ -53,6 +54,7 @@
         "integrationMode": { "enum": ["symbolic", "numeric"] },
         "precisionDigits": { "type": "integer", "minimum": 1, "maximum": 200 },
         "maxSeriesTerms": { "type": "integer", "minimum": 1 },
+        "angleUnit": { "enum": ["radians", "degrees"] },
         "budget": {
           "type": "object",
           "additionalProperties": false,
@@ -96,7 +98,10 @@
               "required": ["expressions", "variables"]
             },
             {
-              "properties": { "operation": { "const": "solveNonlinearSystem" } },
+              "properties": {
+                "operation": { "const": "solveNonlinearSystem" },
+                "mode": { "enum": ["exact", "numeric"] }
+              },
               "required": ["equations", "variables"]
             },
             {
@@ -114,6 +119,13 @@
             {
               "properties": { "operation": { "const": "integrate" } },
               "required": ["expression", "variable"]
+            },
+            {
+              "properties": {
+                "operation": { "const": "calculate" },
+                "mode": { "enum": ["exact", "decimal"] }
+              },
+              "required": ["expression"]
             }
           ]
         }
