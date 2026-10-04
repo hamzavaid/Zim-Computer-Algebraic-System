@@ -34,14 +34,25 @@
         </div>
 
         <label for="calculator-display">Calculator expression</label>
-        <input
-          id="calculator-display"
-          class="calculator-display"
-          inputmode="text"
-          autocomplete="off"
-          spellcheck="false"
-          placeholder="Try: sin(pi / 2) + sqrt(9)"
-        />
+        <div class="calculator-screen">
+          <input
+            id="calculator-display"
+            class="calculator-display"
+            inputmode="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Try: sin(pi / 2) + sqrt(9)"
+          />
+          <button
+            id="calculator-expression-preview"
+            class="calculator-expression-preview"
+            type="button"
+            aria-label="Edit expression"
+            hidden
+          >
+            <span id="calculator-expression-math"></span>
+          </button>
+        </div>
 
         <div class="calculator-options">
           <div>
@@ -65,41 +76,106 @@
         </div>
 
         <div id="calculator-keypad" class="calculator-keypad" aria-label="Calculator keypad">
-          <button type="button" class="function-key" data-value="sin(">sin</button>
-          <button type="button" class="function-key" data-value="cos(">cos</button>
-          <button type="button" class="function-key" data-value="tan(">tan</button>
-          <button type="button" class="function-key" data-value="ln(">ln</button>
-          <button type="button" class="function-key" data-value="sqrt(">√</button>
-          <button type="button" class="function-key" data-value="exp(">exp</button>
-          <button type="button" class="function-key" data-value="abs(">abs</button>
-          <button type="button" class="function-key" data-value="^">xʸ</button>
-          <button type="button" data-value="7">7</button>
-          <button type="button" data-value="8">8</button>
-          <button type="button" data-value="9">9</button>
-          <button type="button" class="operator-key" data-value=" / ">÷</button>
-          <button type="button" data-value="4">4</button>
-          <button type="button" data-value="5">5</button>
-          <button type="button" data-value="6">6</button>
-          <button type="button" class="operator-key" data-value=" * ">×</button>
-          <button type="button" data-value="1">1</button>
-          <button type="button" data-value="2">2</button>
-          <button type="button" data-value="3">3</button>
-          <button type="button" class="operator-key" data-value=" - ">−</button>
-          <button type="button" data-value="0">0</button>
-          <button type="button" data-value=".">.</button>
-          <button type="button" data-value="pi">π</button>
-          <button type="button" class="operator-key" data-value=" + ">+</button>
-          <button type="button" data-value="(">(</button>
-          <button type="button" data-value=")">)</button>
-          <button type="button" data-value="e">e</button>
-          <button type="button" data-value=" mod ">mod</button>
-          <button type="button" class="quiet calculator-wide" data-action="clear">Clear</button>
-          <button type="button" class="quiet" data-action="backspace" aria-label="Backspace">
-            ⌫
-          </button>
-          <button type="button" class="equals-key calculator-wide" data-action="equals">
-            Equals
-          </button>
+          <div class="calculator-function-pad" aria-label="Scientific functions">
+            <button type="button" class="function-key" data-value="sin(" aria-label="Sine">
+              sin
+            </button>
+            <button type="button" class="function-key" data-value="cos(" aria-label="Cosine">
+              cos
+            </button>
+            <button type="button" class="function-key" data-value="tan(" aria-label="Tangent">
+              tan
+            </button>
+            <button
+              type="button"
+              class="function-key"
+              data-value="ln("
+              aria-label="Natural logarithm"
+            >
+              ln
+            </button>
+            <button
+              type="button"
+              class="function-key"
+              data-value="log10("
+              aria-label="Base ten logarithm"
+            >
+              log
+            </button>
+            <button
+              type="button"
+              class="function-key"
+              data-value="logb("
+              aria-label="Logarithm with base"
+            >
+              logₓ
+            </button>
+            <button type="button" class="function-key" data-value="sqrt(" aria-label="Square root">
+              √
+            </button>
+            <button type="button" class="function-key" data-value="cbrt(" aria-label="Cube root">
+              ∛
+            </button>
+            <button
+              type="button"
+              class="function-key"
+              data-action="factorial"
+              aria-label="Factorial"
+            >
+              x!
+            </button>
+            <button type="button" class="function-key" data-value="^" aria-label="Power">xʸ</button>
+            <button type="button" class="function-key" data-value="exp(" aria-label="Exponential">
+              exp
+            </button>
+            <button
+              type="button"
+              class="function-key"
+              data-value="abs("
+              aria-label="Absolute value"
+            >
+              abs
+            </button>
+            <button type="button" class="function-key" data-value="(">(</button>
+            <button type="button" class="function-key" data-value=")">)</button>
+            <button type="button" class="function-key" data-value="pi">π</button>
+            <button type="button" class="function-key" data-value="e">e</button>
+            <button type="button" class="function-key" data-value="Ans">Ans</button>
+            <button type="button" class="function-key" data-value=" mod " aria-label="Remainder">
+              rem
+            </button>
+            <button type="button" class="function-key" data-value="," aria-label="Comma">,</button>
+          </div>
+          <div class="calculator-number-pad" aria-label="Number pad">
+            <button type="button" data-value="7">7</button>
+            <button type="button" data-value="8">8</button>
+            <button type="button" data-value="9">9</button>
+            <button type="button" class="operator-key" data-value=" / " aria-label="Divide">
+              ÷
+            </button>
+            <button type="button" data-value="4">4</button>
+            <button type="button" data-value="5">5</button>
+            <button type="button" data-value="6">6</button>
+            <button type="button" class="operator-key" data-value=" * " aria-label="Multiply">
+              ×
+            </button>
+            <button type="button" data-value="1">1</button>
+            <button type="button" data-value="2">2</button>
+            <button type="button" data-value="3">3</button>
+            <button type="button" class="operator-key" data-value=" - " aria-label="Subtract">
+              −
+            </button>
+            <button type="button" data-value="0">0</button>
+            <button type="button" data-value=".">.</button>
+            <button type="button" class="operator-key" data-value=" + " aria-label="Add">+</button>
+            <button type="button" class="equals-key" data-action="equals" aria-label="Equals">
+              =
+            </button>
+            <button type="button" class="quiet calculator-wide" data-action="clear">Clear</button>
+            <button type="button" class="quiet" data-action="backspace" aria-label="Backspace">
+              ⌫
+            </button>
+          </div>
         </div>
         <p class="hint">
           Use explicit multiplication, such as <code>2*pi</code>. Press Enter to calculate.
@@ -115,6 +191,20 @@
           <summary>LaTeX source</summary>
           <pre id="calculator-latex" class="code-output">0</pre>
         </details>
+      </section>
+
+      <section class="card calculator-history-card" aria-labelledby="calculator-history-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Previous entries</p>
+            <h2 id="calculator-history-heading">Calculator history</h2>
+          </div>
+          <button id="clear-calculator-history" type="button" class="quiet">
+            Clear calculator history
+          </button>
+        </div>
+        <p id="calculator-history-empty" class="hint">Your calculations will appear here.</p>
+        <ol id="calculator-history" class="calculator-history"></ol>
       </section>
     </main>
   </body>

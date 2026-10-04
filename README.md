@@ -26,7 +26,7 @@ npm run start:gui
 
 Then open `http://127.0.0.1:3210`. The interface communicates exclusively through the serialized public API and renders returned AST values with native MathML.
 
-The **Scientific Calculator** button opens `/calculator`, a keyboard-friendly calculator powered by Zim's public `calculate` operation. It supports exact arithmetic, decimal evaluation, radians or degrees, `pi`, `e`, `tau`, and Zim's supported scientific functions without dynamically executing user input.
+The **Scientific Calculator** button opens `/calculator`, a keyboard-friendly calculator powered by Zim's public `calculate` operation. It supports exact arithmetic, decimal evaluation, radians or degrees, persistent and recallable calculation history, `Ans` chaining, remainder, factorial, common and arbitrary-base logarithms, `pi`, `e`, `tau`, and Zim's supported scientific functions without dynamically executing user input. Evaluated expressions are presented as native MathML—including roots, powers, fractions, and logarithm bases—while the original source remains available for editing and in history.
 
 The GUI presents API results in a readable format by default. In Settings, enable **Show result JSON** to display the underlying result data alongside the formatted answer. The separate API developer inspection panel can also be enabled there for full request and response envelopes.
 
@@ -134,6 +134,7 @@ node packages/cli/dist/cli.js polynomial --variable x "x^3 - 2"
 node packages/cli/dist/cli.js nonlinear --variables x,y "x * y = 2; x + y = 3"
 node packages/cli/dist/cli.js derive --variable x --render-mode classroom "sqrt(x + 1) = x - 1"
 node packages/cli/dist/cli.js calculate --result-mode decimal --angle-unit degrees "sin(30) + sqrt(9)"
+node packages/cli/dist/cli.js calculate --answer "1/2" "Ans + 1/2"
 node packages/cli/dist/cli.js differentiate --variables x "x^3 + sin(x)"
 node packages/cli/dist/cli.js limit --variable x --point 0 "sin(x) / x"
 node packages/cli/dist/cli.js integrate --variable x "x^2"
@@ -154,7 +155,7 @@ Command options:
 - `polynomial`: `--variable, -v <name>`, `--json`
 - `nonlinear`: `--variables <name,...>`, `--mode <exact|numeric>`, `--initial-guess <x=...,y=...>`, `--max-iterations <n>`, `--tolerance <number>`, `--max-resultant-degree <n>`, `--json`
 - `derive`: `--variable, -v <name>`, `--render-mode <concise|classroom|diagnostic>`, `--locale <locale>`, `--max-derivation-nodes <n>`, `--json`
-- `calculate`: `--result-mode <exact|decimal>`, `--angle-unit <radians|degrees>`, `--precision-digits <1..15>`, `--json`, `--latex`
+- `calculate`: `--result-mode <exact|decimal>`, `--angle-unit <radians|degrees>`, `--precision-digits <1..15>`, `--answer <expression>`, `--json`, `--latex`
 - `differentiate`: `--variables <name,...>`, `--json`, `--latex`
 - `limit`: `--variable, -v <name>`, `--point <value|infinity>`, `--direction <both|left|right>`, `--json`, `--latex`
 - `integrate`: `--variable, -v <name>`, optional exact `--lower` and `--upper`, `--integration-mode <symbolic|numeric>`, `--precision-digits <n>`, `--max-iterations <n>`, `--max-series-terms <n>`, `--json`, `--latex`

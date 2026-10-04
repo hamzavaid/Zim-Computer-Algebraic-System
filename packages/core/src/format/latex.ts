@@ -28,6 +28,13 @@ function render(expression: Expression, parentPrecedence = 0): string {
   } else if (expression.kind === "function") {
     const args = expression.args.map((argument) => render(argument)).join(", ");
     if (expression.name === "sqrt" && expression.args.length === 1) output = `\\sqrt{${args}}`;
+    else if (expression.name === "cbrt" && expression.args.length === 1)
+      output = `\\sqrt[3]{${args}}`;
+    else if (expression.name === "factorial" && expression.args.length === 1) output = `{${args}}!`;
+    else if (expression.name === "log10" && expression.args.length === 1)
+      output = `\\log_{10}\\left(${args}\\right)`;
+    else if (expression.name === "logb" && expression.args.length === 2)
+      output = `\\log_{${render(expression.args[1]!)}}\\left(${render(expression.args[0]!)}\\right)`;
     else if (expression.name === "abs" && expression.args.length === 1) {
       output = `\\left|${args}\\right|`;
     } else if (["ln", "log", "sin", "cos", "tan", "exp"].includes(expression.name)) {

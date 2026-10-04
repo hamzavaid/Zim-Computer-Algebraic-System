@@ -45,3 +45,31 @@ test("API v2 exposes JSON-safe scientific calculation", () => {
   assert.equal(response.result.text, "8.5");
   assert.equal(response.result.latex, "8.5");
 });
+
+test("calculator supports factorial, remainder, and logarithm families", () => {
+  assert.equal(calculate(parse("factorial(6)"), { mode: "exact" }).text, "720");
+  assert.equal(calculate(parse("17 mod 5"), { mode: "exact" }).text, "2");
+  assert.equal(calculate(parse("log10(1000)"), { mode: "exact" }).text, "3");
+  assert.equal(calculate(parse("logb(8, 2)"), { mode: "exact" }).text, "3");
+  assert.equal(calculate(parse("factorial(-1)"), { mode: "decimal" }).kind, "invalid");
+});
+
+test("calculator substitutes an exact prior answer without dynamic execution", () => {
+  const result = calculate(parse("Ans * 4"), {
+    mode: "exact",
+    answer: parse("1/2"),
+  });
+  assert.equal(result.kind, "exact");
+  assert.equal(result.text, "2");
+
+  const response = executeV2({
+    apiVersion: "2.0-beta",
+    operation: "calculate",
+    expression: "Ans + 1",
+    answer: "2/3",
+  });
+  assert.equal(response.status, "ok");
+  assert.equal(response.result.text, "5/3");
+  assert.equal(response.result.inputLatex, "Ans + 1");
+  assert.equal(response.result.input.kind, "binary");
+});

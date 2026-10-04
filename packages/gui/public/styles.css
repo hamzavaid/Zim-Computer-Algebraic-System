@@ -327,6 +327,28 @@ button.quiet {
   font-size: clamp(1.15rem, 3vw, 1.55rem);
 }
 
+.calculator-screen {
+  min-height: 4.25rem;
+}
+
+.calculator-expression-preview {
+  width: 100%;
+  min-height: 4.25rem;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--surface-strong);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  text-align: right;
+}
+
+.calculator-expression-preview math {
+  margin-left: auto;
+}
+
 .calculator-options {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -336,8 +358,25 @@ button.quiet {
 
 .calculator-keypad {
   display: grid;
-  grid-template-columns: repeat(4, minmax(3rem, 1fr));
-  gap: 0.55rem;
+  gap: 0.8rem;
+}
+
+.calculator-function-pad,
+.calculator-number-pad {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.calculator-function-pad {
+  grid-template-columns: repeat(6, minmax(3rem, 1fr));
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.calculator-number-pad {
+  grid-template-columns: repeat(4, minmax(3.25rem, 1fr));
+  width: min(100%, 30rem);
+  margin-inline: auto;
 }
 
 .calculator-keypad button {
@@ -351,6 +390,8 @@ button.quiet {
 }
 
 .calculator-keypad .operator-key {
+  color: var(--surface);
+  background: var(--accent-strong);
   font-weight: 800;
 }
 
@@ -368,6 +409,46 @@ button.quiet {
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(1.6rem, 4vw, 2.5rem);
   overflow-wrap: anywhere;
+}
+
+.calculator-history-card {
+  grid-column: 1 / -1;
+}
+
+.calculator-history {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.7rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calculator-history button {
+  width: 100%;
+  min-height: 5rem;
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--surface-strong);
+  text-align: left;
+}
+
+.calculator-history-expression,
+.calculator-history-result {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.calculator-history-expression {
+  margin-bottom: 0.4rem;
+  color: var(--muted);
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.78rem;
+}
+
+.calculator-history-result {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
 }
 
 .hint,
@@ -544,6 +625,10 @@ summary {
 
   .calculator-options {
     grid-template-columns: 1fr;
+  }
+
+  .calculator-function-pad {
+    grid-template-columns: repeat(3, minmax(3rem, 1fr));
   }
 }
 

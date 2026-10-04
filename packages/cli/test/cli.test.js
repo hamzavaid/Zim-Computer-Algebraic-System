@@ -55,6 +55,7 @@ test("v2 parity commands expose human and JSON output", () => {
     [["limit", "--variable", "x", "--point", "0", "sin(x)\/x"], /= 1/],
     [["integrate", "--variable", "x", "x^2"], /\+ C/],
     [["calculate", "--result-mode", "decimal", "--angle-unit", "degrees", "sin(30)"], /0\.5/],
+    [["calculate", "--answer", "1/2", "Ans + 1/2"], /^1\s*$/],
     [["format", "(x + 1) * (x - 1)"], /\(x \+ 1\) \* \(x - 1\)/],
   ];
   for (const [args, expected] of cases) {
@@ -98,6 +99,10 @@ test("CLI help documents every public command and its important flags", () => {
     "--json",
   ])
     assert.match(nonlinear.stdout, new RegExp(flag));
+  const calculator = cli("calculate", "--help");
+  assert.equal(calculator.status, 0);
+  for (const flag of ["--result-mode", "--angle-unit", "--precision-digits", "--answer"])
+    assert.match(calculator.stdout, new RegExp(flag));
 });
 
 test("new commands validate required options and preserve unsupported exit status", () => {

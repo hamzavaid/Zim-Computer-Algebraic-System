@@ -55,6 +55,7 @@
         "precisionDigits": { "type": "integer", "minimum": 1, "maximum": 200 },
         "maxSeriesTerms": { "type": "integer", "minimum": 1 },
         "angleUnit": { "enum": ["radians", "degrees"] },
+        "answer": { "type": ["string", "number"] },
         "budget": {
           "type": "object",
           "additionalProperties": false,

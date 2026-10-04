@@ -101,9 +101,16 @@ test("GUI serves an accessible scientific calculator subpage", async () => {
     "calculator-angle",
     "calculator-result",
     "calculator-keypad",
+    "calculator-expression-preview",
+    "calculator-history",
+    "clear-calculator-history",
   ])
     assert.match(calculatorHtml, new RegExp(`id=["']${id}["']`));
   assert.doesNotMatch(calculatorHtml, /onclick=/);
+  assert.match(calculatorHtml, /data-value=["']Ans["']/);
+  assert.match(calculatorHtml, /data-action=["']factorial["']/);
+  assert.match(calculatorHtml, /data-value=["']log10\(["']/);
+  assert.match(calculatorHtml, /data-action=["']equals["'][^>]*>\s*=\s*</s);
   const script = await fetch(`${endpoint}/calculator.js`);
   assert.equal(script.status, 200);
   assert.match(await script.text(), /operation:\s*["']calculate["']/);

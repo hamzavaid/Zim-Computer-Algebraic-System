@@ -185,11 +185,35 @@ test("scientific calculator subpage uses the Zim API in exact and decimal modes"
   await display.fill("1/3 + 1/6");
   await page.getByRole("button", { name: "Equals" }).click();
   await expect(page.locator("#calculator-result")).toHaveText("1/2");
+  await expect(page.locator("#calculator-history li").first()).toContainText("1/3 + 1/6");
+  await expect(page.locator("#calculator-history li").first().locator("mfrac mn")).toHaveText([
+    "1",
+    "2",
+  ]);
+  await expect(page.locator("#calculator-expression-preview")).toBeVisible();
+  await page.getByRole("button", { name: "Clear", exact: true }).click();
+  await page.getByRole("button", { name: "Add" }).click();
+  await expect(display).toHaveValue("Ans + ");
+  await display.fill("Ans + 1/2");
+  await display.press("Enter");
+  await expect(page.locator("#calculator-result")).toHaveText("1");
+  await page.getByRole("button", { name: "Clear", exact: true }).click();
+  await page.getByRole("button", { name: "6", exact: true }).click();
+  await page.getByRole("button", { name: "Factorial" }).click();
+  await expect(display).toHaveValue("factorial(6)");
+  await page.getByRole("button", { name: "Equals" }).click();
+  await expect(page.locator("#calculator-result")).toHaveText("720");
   await page.getByLabel("Result mode").selectOption("decimal");
   await page.getByLabel("Angle unit").selectOption("degrees");
   await display.fill("sin(30) + sqrt(9)");
   await display.press("Enter");
   await expect(page.locator("#calculator-result")).toHaveText("3.5");
+  await page.reload();
+  await expect(page.locator("#calculator-history li")).toHaveCount(4);
+  await page.locator("#calculator-history li").last().getByRole("button").click();
+  await expect(display).toHaveValue("1/3 + 1/6");
+  await page.getByRole("button", { name: "Clear calculator history" }).click();
+  await expect(page.locator("#calculator-history li")).toHaveCount(0);
   await page.getByRole("link", { name: "Back to workspace" }).click();
   await expect(page).toHaveURL(/\/$/);
 });

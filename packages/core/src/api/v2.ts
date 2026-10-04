@@ -105,6 +105,7 @@ export type ApiV2Request =
       readonly mode?: "exact" | "decimal";
       readonly angleUnit?: "radians" | "degrees";
       readonly precisionDigits?: number;
+      readonly answer?: string | number;
     })
   | (BaseRequest & {
       readonly operation: "solveSystem";
@@ -280,7 +281,10 @@ function validateRequest(value: unknown): value is ApiV2Request {
           (typeof value.precisionDigits === "number" &&
             Number.isInteger(value.precisionDigits) &&
             value.precisionDigits >= 1 &&
-            value.precisionDigits <= 15))
+            value.precisionDigits <= 15)) &&
+        (value.answer === undefined ||
+          (typeof value.answer === "string" && value.answer.trim() !== "") ||
+          (typeof value.answer === "number" && Number.isFinite(value.answer)))
       );
     default:
       return false;
@@ -288,6 +292,8 @@ function validateRequest(value: unknown): value is ApiV2Request {
 }
 
 function sourceStrings(request: ApiV2Request): readonly string[] {
+  if (request.operation === "calculate" && typeof request.answer === "string")
+    return [request.expression, request.answer];
   if ("expression" in request) return [request.expression];
   if (request.operation === "solveRelation") return [request.relation];
   if (request.operation === "solveSystem") return request.expressions;
@@ -790,10 +796,16 @@ export function executeV2(request: unknown): ApiV2Response {
       });
     }
     if (request.operation === "calculate") {
-      const result = calculate(parsedExpression(request.expression, request.budget), {
+      const input = parsedExpression(request.expression, request.budget);
+      const answer =
+        typeof request.answer === "string"
+          ? parsedExpression(request.answer, request.budget)
+          : request.answer;
+      const result = calculate(input, {
         mode: request.mode,
         angleUnit: request.angleUnit,
         precisionDigits: request.precisionDigits,
+        answer,
       });
       return finish({
         status:
@@ -803,8 +815,15 @@ export function executeV2(request: unknown): ApiV2Response {
               ? "unsupported"
               : "invalid",
         result:
-          result.kind === "exact"
-            ? { ...result, expression: serializeExpression(result.expression) }
+          result.kind === "exact" || result.kind === "decimal"
+            ? {
+                ...result,
+                input: serializeExpression(input),
+                inputLatex: toLatex(input),
+                ...(result.kind === "exact"
+                  ? { expression: serializeExpression(result.expression) }
+                  : {}),
+              }
             : result,
         diagnostics: { operation: request.operation },
       });
